@@ -21,7 +21,7 @@ PermissionMode = str  # "default" | "plan" | "acceptEdits" | "bypassPermissions"
 
 READ_TOOLS = {
     "read_file", "list_files", "grep_search", "web_fetch",
-    "skills_list", "skill_view",
+    "skills_list", "skill_view", "code_graph",
 }
 EDIT_TOOLS = {"write_file", "edit_file", "skill_manage"}
 
@@ -207,6 +207,40 @@ tool_definitions: list[ToolDef] = [
         },
     },
     # ─── Tool search (deferred tool loader) ─────────────────────
+    {
+        "name": "code_graph",
+        "description": (
+            "Build or refresh a local code structure graph, then search symbols, "
+            "query relationships, inspect change impact, or summarize architecture."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["search", "query", "impact", "overview"],
+                },
+                "query": {"type": "string", "description": "Search text for search."},
+                "target": {"type": "string", "description": "Symbol or relative path."},
+                "relation": {
+                    "type": "string",
+                    "enum": [
+                        "callers_of", "callees_of", "importers_of", "tests_for",
+                        "children_of", "inheritors_of", "references_to",
+                    ],
+                },
+                "changed_files": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "max_results": {
+                    "type": "integer", "minimum": 1, "maximum": 100, "default": 20,
+                },
+            },
+            "required": ["action"],
+        },
+        "deferred": True,
+    },
     {
         "name": "tool_search",
         "description": "Search for available tools by name or keyword. Returns full schema definitions for matching deferred tools so you can use them.",
@@ -749,11 +783,12 @@ async def execute_tool(
 
     # tool_search: activate deferred tools and return their schemas
     if name == "tool_search":
-        query = (inp.get("query") or "").lower()
+        query = (inp.get("query") or "").lower().replace("_", " ")
         deferred = [t for t in tool_definitions if t.get("deferred")]
         matches = [
             t for t in deferred
-            if query in t["name"].lower() or query in (t.get("description") or "").lower()
+            if query in t["name"].lower().replace("_", " ")
+            or query in (t.get("description") or "").lower()
         ]
         if not matches:
             return "No matching deferred tools found."
@@ -763,6 +798,11 @@ async def execute_tool(
             [{"name": t["name"], "description": t.get("description", ""), "input_schema": t["input_schema"]} for t in matches],
             indent=2,
         )
+
+    if name == "code_graph":
+        from .code_graph import execute_code_graph
+
+        return await execute_code_graph(inp)
 
     handlers: dict = {
         "write_file": _write_file,

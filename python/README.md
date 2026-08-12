@@ -39,12 +39,30 @@ OPENAI_API_KEY=sk-xxx mini-claude-py --api-base https://api.openai.com/v1 --mode
 人工技能和用户级技能保持只读。使用 `--skill-review-interval N` 或
 `MINI_CLAUDE_SKILL_REVIEW_INTERVAL=N` 调整频率，设置为 `0` 可关闭。
 
+## 按需代码图
+
+Agent 内置了延迟加载的 `code_graph` 工具。需要理解代码结构、追踪调用关系或
+审查变更影响时，Agent 会先通过 `tool_search` 激活它；普通对话不会加载解析器，
+也不会增加启动开销。
+
+工具提供四种动作：
+
+- `search`：按符号名、限定名或相对文件路径搜索。
+- `query`：查询调用、导入、测试、包含、继承和引用关系。
+- `impact`：分析当前 Git 变更的两跳反向依赖影响。
+- `overview`：返回语言、目录、节点、关系、测试符号和高入度符号摘要。
+
+首次调用会建立索引，后续调用仅刷新发生变化的源码。索引保存在
+`~/.mini-claude/projects/<项目哈希>/code-graph.sqlite`，不会修改被分析仓库。
+支持 Python、JavaScript/JSX、TypeScript/TSX、Java、Go、Rust、C/C++ 和 C#。
+
 ## 文件结构
 
 | Python 文件 | 对应 TypeScript | 说明 |
 |-------------|----------------|------|
 | `agent.py` | `agent.ts` | Agent 核心循环、双后端、4 层压缩 |
-| `tools.py` | `tools.ts` | 10 个工具 + 5 种权限模式 |
+| `tools.py` | `tools.ts` | 内置工具定义、执行与 5 种权限模式 |
+| `code_graph.py` | — | 按需代码结构索引、关系查询与变更影响 |
 | `__main__.py` | `cli.ts` | CLI 入口与 REPL |
 | `ui.py` | `ui.ts` | 终端 UI（rich） |
 | `prompt.py` | `prompt.ts` | 系统提示词构造 |

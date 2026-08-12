@@ -9,6 +9,7 @@ claude_code_from_scratch.egg-info/top_level.txt
 mini_claude/__init__.py
 mini_claude/__main__.py
 mini_claude/agent.py
+mini_claude/code_graph.py
 mini_claude/frontmatter.py
 mini_claude/memory.py
 mini_claude/prompt.py

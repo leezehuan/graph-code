@@ -331,6 +331,7 @@ def build_classifier_system(rules: dict) -> str:
 AUTO_MODE_FAST_PATH_TOOLS = {
     "read_file", "list_files", "grep_search", "tool_search",
     "enter_plan_mode", "exit_plan_mode", "skills_list", "skill_view",
+    "code_graph",
 }
 
 # Denial limits: after this many blocks the classifier is probably stuck in a
