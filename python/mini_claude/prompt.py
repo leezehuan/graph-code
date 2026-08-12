@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from .memory import build_memory_prompt_section
-from .skills import build_skill_descriptions
+from .skills import SkillStore, build_skill_descriptions
 from .subagent import build_agent_descriptions
 from .tools import get_deferred_tool_names
 
@@ -213,14 +213,17 @@ def build_static_system_prompt() -> str:
     return SYSTEM_PROMPT_TEMPLATE
 
 
-def build_dynamic_system_context() -> str:
+def build_dynamic_system_context(skill_store: SkillStore | None = None) -> str:
     """Per-session context: stable within a session but varies by
     machine/project, so it stays uncached. Kept OUT of the static block."""
     plat = f"{platform.system()} {platform.machine()}"
     shell = (os.environ.get("ComSpec") or "cmd.exe") if sys.platform == "win32" else os.environ.get("SHELL", "/bin/sh")
     git_context = get_git_context()
     memory_section = build_memory_prompt_section()
-    skills_section = build_skill_descriptions()
+    skills_section = (
+        skill_store.format_index() if skill_store is not None
+        else build_skill_descriptions()
+    )
     agent_section = build_agent_descriptions()
 
     deferred_names = get_deferred_tool_names()
@@ -258,9 +261,9 @@ def build_user_context_reminder() -> str:
     )
 
 
-def build_system_prompt() -> str:
+def build_system_prompt(skill_store: SkillStore | None = None) -> str:
     """Combined static + dynamic prompt as a single string. Used by the
     OpenAI-compatible backend (which relies on the provider's automatic prefix
     caching) and as a fallback; the Anthropic backend uses the split blocks
     above so it can place its own cache_control breakpoint."""
-    return f"{build_static_system_prompt()}\n\n{build_dynamic_system_context()}"
+    return f"{build_static_system_prompt()}\n\n{build_dynamic_system_context(skill_store)}"

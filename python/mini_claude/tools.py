@@ -1,6 +1,6 @@
-"""Tool definitions and execution — 10 tools with 5 permission modes.
+"""Built-in tool definitions and execution with five permission modes.
 Tool system inspired by Claude Code's published design: read_file, write_file, edit_file, list_files,
-grep_search, run_shell, skill, enter/exit_plan_mode, agent."""
+grep_search, run_shell, skills, enter/exit_plan_mode, agent."""
 
 from __future__ import annotations
 
@@ -19,11 +19,17 @@ from .frontmatter import parse_frontmatter
 
 PermissionMode = str  # "default" | "plan" | "acceptEdits" | "bypassPermissions" | "dontAsk" | "auto"
 
-READ_TOOLS = {"read_file", "list_files", "grep_search", "web_fetch"}
-EDIT_TOOLS = {"write_file", "edit_file"}
+READ_TOOLS = {
+    "read_file", "list_files", "grep_search", "web_fetch",
+    "skills_list", "skill_view",
+}
+EDIT_TOOLS = {"write_file", "edit_file", "skill_manage"}
 
 # Concurrency-safe tools can run in parallel (read-only, no side effects)
-CONCURRENCY_SAFE_TOOLS = {"read_file", "list_files", "grep_search", "web_fetch"}
+CONCURRENCY_SAFE_TOOLS = {
+    "read_file", "list_files", "grep_search", "web_fetch",
+    "skills_list", "skill_view",
+}
 
 IS_WIN = sys.platform == "win32"
 
@@ -117,6 +123,50 @@ tool_definitions: list[ToolDef] = [
                 "args": {"type": "string", "description": "Optional arguments to pass to the skill"},
             },
             "required": ["skill_name"],
+        },
+    },
+    {
+        "name": "skills_list",
+        "description": "List available skills using only their names and descriptions. Use skill_view to load a skill's instructions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Optional category filter"},
+            },
+        },
+    },
+    {
+        "name": "skill_view",
+        "description": "Load a skill's full SKILL.md instructions or one linked file under references, templates, scripts, or assets.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Skill name"},
+                "file_path": {"type": "string", "description": "Optional linked file path"},
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "skill_manage",
+        "description": "Create, edit, patch, delete, or manage supporting files for project and user skills. Read a skill with skill_view before editing it.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["create", "edit", "patch", "delete", "write_file", "remove_file"],
+                },
+                "name": {"type": "string", "description": "Skill name"},
+                "content": {"type": "string", "description": "Full SKILL.md content for create/edit"},
+                "category": {"type": "string", "description": "Optional one-segment category for create"},
+                "file_path": {"type": "string", "description": "Supporting file path under references/templates/scripts/assets"},
+                "file_content": {"type": "string", "description": "Supporting file content"},
+                "old_string": {"type": "string", "description": "Text to replace for patch"},
+                "new_string": {"type": "string", "description": "Replacement text for patch"},
+                "replace_all": {"type": "boolean", "description": "Replace all patch matches"},
+            },
+            "required": ["action", "name"],
         },
     },
     {
@@ -638,6 +688,9 @@ def check_permission(
     elif tool_name == "edit_file" and not Path(inp.get("file_path", "")).exists():
         needs_confirm = True
         confirm_message = f"edit non-existent file: {inp.get('file_path', '')}"
+    elif tool_name == "skill_manage" and inp.get("action") in {"create", "delete"}:
+        needs_confirm = True
+        confirm_message = f"skill_manage {inp.get('action')} skill: {inp.get('name', '')}"
 
     if needs_confirm:
         if mode == "dontAsk":
@@ -664,7 +717,7 @@ def _truncate_result(result: str) -> str:
 
 
 # ─── Execute a tool call ────────────────────────────────────
-# "agent" and "skill" tools are handled in agent.py to avoid circular deps.
+# Agent and skill tools are handled in agent.py to keep the SkillStore instance-scoped.
 
 
 async def execute_tool(

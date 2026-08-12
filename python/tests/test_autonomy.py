@@ -1,8 +1,6 @@
 """Golden-fixture tests for the autonomy pure functions, using the stdlib
-unittest runner (zero extra deps). Reads test/fixtures/autonomy-golden.json --
-the SAME file the TS suite reads -- so /goal, /loop, and Auto Mode stay in sync
-across the two language mirrors. autonomy.py imports only stdlib, so this runs on
-a plain python3 without the anthropic/openai deps.
+unittest runner (zero extra deps). autonomy.py imports only stdlib, so this runs
+on a plain python3 without the anthropic/openai deps.
 
 Run with `python3 python/tests/test_autonomy.py` (or `npm run test:py`)."""
 import json
@@ -10,15 +8,13 @@ import sys
 import unittest
 from pathlib import Path
 
-# repo layout: python/tests/test_autonomy.py -> python/ (add to path) -> repo/
 _HERE = Path(__file__).resolve()
 _PYTHON_DIR = _HERE.parent.parent
-_REPO = _PYTHON_DIR.parent
 sys.path.insert(0, str(_PYTHON_DIR))
 
 from mini_claude import autonomy as a  # noqa: E402
 
-GOLDEN = json.loads((_REPO / "test" / "fixtures" / "autonomy-golden.json").read_text(encoding="utf-8"))
+GOLDEN = json.loads((_HERE.parent / "fixtures" / "autonomy-golden.json").read_text(encoding="utf-8"))
 
 
 class TestAutonomyGolden(unittest.TestCase):

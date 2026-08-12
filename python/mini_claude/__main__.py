@@ -12,7 +12,7 @@ from .agent import Agent
 from .ui import print_welcome, print_user_prompt, print_error, print_info, print_plan_for_approval, print_plan_approval_options
 from .session import load_session, get_latest_session_id
 from .memory import list_memories
-from .skills import discover_skills, resolve_skill_prompt, get_skill_by_name, execute_skill
+from .skills import resolve_skill_prompt
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,6 +33,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--resume", action="store_true", help="Resume last session")
     parser.add_argument("--max-cost", type=float, default=None, help="Max USD spend")
     parser.add_argument("--max-turns", type=int, default=None, help="Max agentic turns")
+    parser.add_argument(
+        "--skill-review-interval",
+        type=int,
+        default=None,
+        help="Background skill review interval in tool iterations (0 disables)",
+    )
     parser.add_argument("--help", "-h", action="store_true", help="Show help")
     return parser.parse_args()
 
@@ -180,7 +186,7 @@ async def run_repl(agent: Agent) -> None:
                     print(f"    [{m.type}] {m.name} — {m.description}")
             continue
         if inp == "/skills":
-            skills = discover_skills()
+            skills = agent.skill_store.list()
             if not skills:
                 print_info("No skills found. Add skills to .claude/skills/<name>/SKILL.md")
             else:
@@ -195,12 +201,12 @@ async def run_repl(agent: Agent) -> None:
             space_idx = inp.find(" ")
             cmd_name = inp[1:space_idx] if space_idx > 0 else inp[1:]
             cmd_args = inp[space_idx + 1:] if space_idx > 0 else ""
-            skill = get_skill_by_name(cmd_name)
+            skill = agent.skill_store.get(cmd_name)
             if skill and skill.user_invocable:
                 print_info(f"Invoking skill: {skill.name}")
                 try:
                     if skill.context == "fork":
-                        result = execute_skill(skill.name, cmd_args)
+                        result = agent.skill_store.render(skill.name, cmd_args)
                         if result:
                             await agent.chat(f'Use the skill tool to invoke "{skill.name}" with args: {cmd_args or "(none)"}')
                     else:
@@ -241,6 +247,7 @@ Options:
   --resume            Resume the last session
   --max-cost USD      Stop when estimated cost exceeds this amount
   --max-turns N       Stop after N agentic turns
+  --skill-review-interval N  Review skills every N tool iterations (0 disables)
   --help, -h          Show this help
 
 REPL commands:
@@ -269,6 +276,18 @@ Examples:
     permission_mode = _resolve_permission_mode(args)
     model = args.model or os.environ.get("MINI_CLAUDE_MODEL", "claude-opus-4-6")
     api_base = args.api_base
+    raw_review_interval = (
+        args.skill_review_interval
+        if args.skill_review_interval is not None
+        else os.environ.get("MINI_CLAUDE_SKILL_REVIEW_INTERVAL", "10")
+    )
+    try:
+        skill_review_interval = int(raw_review_interval)
+        if skill_review_interval < 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        print_error("Skill review interval must be a non-negative integer.")
+        sys.exit(1)
 
     # Resolve API config
     resolved_api_base = api_base
@@ -309,6 +328,7 @@ Examples:
         api_base=resolved_api_base if resolved_use_openai else None,
         anthropic_base_url=resolved_api_base if not resolved_use_openai else None,
         api_key=resolved_api_key,
+        skill_review_interval=skill_review_interval,
     )
 
     # Resume session

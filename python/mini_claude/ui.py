@@ -183,6 +183,9 @@ _TOOL_ICONS = {
     "grep_search": "🔍",
     "run_shell": "💻",
     "skill": "⚡",
+    "skills_list": "📚",
+    "skill_view": "📖",
+    "skill_manage": "📝",
     "agent": "🤖",
 }
 
@@ -207,6 +210,11 @@ def _get_tool_summary(name: str, inp: dict) -> str:
         return cmd[:60] + "..." if len(cmd) > 60 else cmd
     if name == "skill":
         return inp.get("skill_name", "")
+    if name in ("skill_view", "skill_manage"):
+        action = f"{inp.get('action')} " if name == "skill_manage" else ""
+        return f"{action}{inp.get('name', '')}".strip()
+    if name == "skills_list":
+        return inp.get("category", "all")
     if name == "agent":
         return f'[{inp.get("type", "general")}] {inp.get("description", "")}'
     return ""
