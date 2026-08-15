@@ -907,10 +907,10 @@ class CodeGraphBehaviorTests(unittest.TestCase):
         self.assertEqual(failed["error"]["code"], "embedding_error")
         self.assertEqual(
             [len(request["payload"]["input"]) for request in server.requests],
-            [64, 7, 7, 1],
+            [20, 20, 20, 20, 11, 1],
         )
-        self.assertEqual(resumed["data"]["embedding"]["cache_hits"], 64)
-        self.assertEqual(resumed["data"]["embedding"]["updated_nodes"], 7)
+        self.assertEqual(resumed["data"]["embedding"]["cache_hits"], 20)
+        self.assertEqual(resumed["data"]["embedding"]["updated_nodes"], 51)
 
     def test_non_semantic_actions_never_call_the_embedding_provider(self):
         (self.repo / "app.py").write_text(

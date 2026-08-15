@@ -19,7 +19,7 @@ from typing import Any, Iterable, Iterator
 from ._dotenv import dotenv_values
 
 PROVIDER = "openai-compatible"
-MAX_BATCH_SIZE = 64
+MAX_BATCH_SIZE = 20
 MAX_EMBEDDING_TEXT = 4096
 REQUEST_TIMEOUT_SECONDS = 60
 
