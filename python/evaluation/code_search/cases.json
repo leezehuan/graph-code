@@ -1,0 +1,132 @@
+{
+  "repositories": {
+    "mini": {
+      "search": [
+        {"id":"mini-01","category":"identifier","query":"execute_code_graph","gold_nodes":["python/mini_claude/code_graph.py::execute_code_graph"]},
+        {"id":"mini-02","category":"identifier","query":"load_dotenv","gold_nodes":["python/mini_claude/_dotenv.py::load_dotenv"]},
+        {"id":"mini-03","category":"identifier","query":"check_permission","gold_nodes":["python/mini_claude/tools.py::check_permission"]},
+        {"id":"mini-04","category":"identifier","query":"Agent.chat","gold_nodes":["python/mini_claude/agent.py::Agent.chat"]},
+        {"id":"mini-05","category":"identifier","query":"SkillStore","gold_nodes":["python/mini_claude/skills.py::SkillStore"]},
+        {"id":"mini-06","category":"path","query":"python/mini_claude/_dotenv.py","gold_nodes":["python/mini_claude/_dotenv.py"]},
+        {"id":"mini-07","category":"path","query":"python/mini_claude/agent.py::Agent._call_openai_stream","gold_nodes":["python/mini_claude/agent.py::Agent._call_openai_stream"]},
+        {"id":"mini-08","category":"path","query":"python/mini_claude/_code_graph_embeddings.py","gold_nodes":["python/mini_claude/_code_graph_embeddings.py"]},
+        {"id":"mini-09","category":"path","query":"python/tests/test_code_graph_tool.py","gold_nodes":["python/tests/test_code_graph_tool.py"]},
+        {"id":"mini-10","category":"path","query":"python/mini_claude/session.py::load_session","gold_nodes":["python/mini_claude/session.py::load_session"]},
+        {"id":"mini-11","category":"concept","query":"incremental code graph index refresh","gold_nodes":["python/mini_claude/code_graph.py::_refresh"]},
+        {"id":"mini-12","category":"concept","query":"hybrid full text and vector ranking","gold_nodes":["python/mini_claude/_code_graph_search.py::hybrid_search"]},
+        {"id":"mini-13","category":"concept","query":"cloud embedding cache refresh","gold_nodes":["python/mini_claude/_code_graph_embeddings.py::refresh_embeddings"]},
+        {"id":"mini-14","category":"concept","query":"deferred tool activation schema","gold_nodes":["python/mini_claude/tools.py::execute_tool"]},
+        {"id":"mini-15","category":"concept","query":"two hop change impact analysis","gold_nodes":["python/mini_claude/code_graph.py::_impact"]},
+        {"id":"mini-16","category":"mixed","query":"OpenAI streaming tool calls","gold_nodes":["python/mini_claude/agent.py::Agent._call_openai_stream","python/mini_claude/agent.py::Agent._chat_openai"]},
+        {"id":"mini-17","category":"mixed","query":"FTS5 search_nodes ranking","gold_nodes":["python/mini_claude/_code_graph_search.py::fts_search","python/mini_claude/_code_graph_search.py::search_nodes"]},
+        {"id":"mini-18","category":"mixed","query":"embedding provider configuration","gold_nodes":["python/mini_claude/_code_graph_embeddings.py::EmbeddingConfig","python/mini_claude/_code_graph_embeddings.py::load_embedding_config"]},
+        {"id":"mini-19","category":"mixed","query":"agent permission mode","gold_nodes":["python/mini_claude/tools.py::check_permission","python/mini_claude/agent.py::Agent.__init__"]},
+        {"id":"mini-20","category":"mixed","query":"semantic memory recall","gold_nodes":["python/mini_claude/memory.py::select_relevant_memories"]}
+      ],
+      "relations": [
+        {"id":"mini-r01","relation":"callers_of","target":"python/mini_claude/code_graph.py::execute_code_graph","anchor_query":"execute_code_graph","anchor_node":"python/mini_claude/code_graph.py::execute_code_graph","gold_nodes":["python/mini_claude/tools.py::execute_tool"]},
+        {"id":"mini-r02","relation":"callees_of","target":"python/mini_claude/agent.py::Agent.chat","anchor_query":"Agent.chat","anchor_node":"python/mini_claude/agent.py::Agent.chat","gold_nodes":["python/mini_claude/agent.py::Agent._chat_openai","python/mini_claude/agent.py::Agent._chat_anthropic"]},
+        {"id":"mini-r03","relation":"children_of","target":"python/mini_claude/agent.py::Agent","anchor_query":"Agent class","anchor_node":"python/mini_claude/agent.py::Agent","gold_nodes":["python/mini_claude/agent.py::Agent.chat","python/mini_claude/agent.py::Agent.__init__"]},
+        {"id":"mini-r04","relation":"references_to","target":"python/mini_claude/tools.py::check_permission","anchor_query":"permission checks","anchor_node":"python/mini_claude/tools.py::check_permission","gold_nodes":["python/tests/test_skill_tools.py::SkillToolPermissionTests.test_explicit_deny_still_beats_bypass"]},
+        {"id":"mini-r05","relation":"children_of","target":"python/mini_claude/skills.py::SkillStore","anchor_query":"SkillStore methods","anchor_node":"python/mini_claude/skills.py::SkillStore","gold_nodes":["python/mini_claude/skills.py::SkillStore.get","python/mini_claude/skills.py::SkillStore.list"]},
+        {"id":"mini-r06","relation":"callees_of","target":"python/mini_claude/_code_graph_search.py::hybrid_search","anchor_query":"hybrid search","anchor_node":"python/mini_claude/_code_graph_search.py::hybrid_search","gold_nodes":["python/mini_claude/_code_graph_search.py::fts_search","python/mini_claude/_code_graph_search.py::semantic_search"]}
+      ],
+      "qa": [
+        {"id":"mini-q01","question":"代码图工具如何被延迟激活？","reference":"通过 tool_search 激活 deferred 的 code_graph 工具，然后调用 execute_code_graph。","search_query":"deferred tool activation","gold_nodes":["python/mini_claude/tools.py::execute_tool"]},
+        {"id":"mini-q02","question":"hybrid 搜索如何融合词法和向量结果？","reference":"它分别获取 FTS 和 semantic 候选，再使用 RRF 合并并进行确定性提升。","search_query":"hybrid search ranking","gold_nodes":["python/mini_claude/_code_graph_search.py::hybrid_search"]},
+        {"id":"mini-q03","question":"embedding 缓存何时刷新节点？","reference":"节点文本或源码内容哈希变化，或 provider/model 身份变化时刷新受影响节点。","search_query":"embedding cache refresh","gold_nodes":["python/mini_claude/_code_graph_embeddings.py::refresh_embeddings"]},
+        {"id":"mini-q04","question":"Agent 的 OpenAI 流式调用怎样处理工具调用？","reference":"它增量收集 stream 中的 tool_calls 参数，合并分片后交给工具执行流程。","search_query":"OpenAI streaming tool calls","gold_nodes":["python/mini_claude/agent.py::Agent._call_openai_stream"]},
+        {"id":"mini-q05","question":"代码图 impact 查询遍历多少跳？","reference":"impact 固定沿反向依赖关系进行两跳遍历。","search_query":"two hop impact analysis","gold_nodes":["python/mini_claude/code_graph.py::_impact"]},
+        {"id":"mini-q06","question":"默认环境变量从哪里加载？","reference":"优先使用进程环境变量，否则读取 Mini Claude 源码仓库根目录的 .env。","search_query":"load environment dotenv","gold_nodes":["python/mini_claude/_dotenv.py::load_dotenv"]}
+      ]
+    },
+    "coc-lite": {
+      "search": [
+        {"id":"coc-01","category":"identifier","query":"RetrievalService.query","gold_nodes":["backend/app/services/retrieval.py::RetrievalService.query"]},
+        {"id":"coc-02","category":"identifier","query":"KeeperSupervisor.run_turn","gold_nodes":["backend/app/services/agents/supervisor.py::KeeperSupervisor.run_turn"]},
+        {"id":"coc-03","category":"identifier","query":"GameAssistantAgent","gold_nodes":["backend/app/services/assistant_agent.py::GameAssistantAgent"]},
+        {"id":"coc-04","category":"identifier","query":"AgentMessage","gold_nodes":["backend/app/services/agents/base.py::AgentMessage"]},
+        {"id":"coc-05","category":"identifier","query":"emit_debug","gold_nodes":["backend/app/services/debug_events.py::emit_debug"]},
+        {"id":"coc-06","category":"path","query":"backend/app/services/retrieval.py","gold_nodes":["backend/app/services/retrieval.py"]},
+        {"id":"coc-07","category":"path","query":"backend/app/services/agents/supervisor.py","gold_nodes":["backend/app/services/agents/supervisor.py"]},
+        {"id":"coc-08","category":"path","query":"frontend/src/App.tsx","gold_nodes":["frontend/src/App.tsx"]},
+        {"id":"coc-09","category":"path","query":"backend/app/services/llm.py::LLMClient","gold_nodes":["backend/app/services/llm.py::LLMClient"]},
+        {"id":"coc-10","category":"path","query":"backend/app/services/tools/context_search.py","gold_nodes":["backend/app/services/tools/context_search.py"]},
+        {"id":"coc-11","category":"concept","query":"RAG context retrieval service","gold_nodes":["backend/app/services/retrieval.py::RetrievalService"]},
+        {"id":"coc-12","category":"concept","query":"planner executor narrator agent workflow","gold_nodes":["backend/app/services/agents/planner_agent.py::PlannerAgent","backend/app/services/agents/executor_agent.py::ExecutorAgent","backend/app/services/agents/narrator_agent.py::NarratorAgent"]},
+        {"id":"coc-13","category":"concept","query":"game assistant semantic query expansion","gold_nodes":["backend/app/services/assistant_agent.py::GameAssistantAgent.expand_queries"]},
+        {"id":"coc-14","category":"concept","query":"OpenAI compatible LLM client JSON","gold_nodes":["backend/app/services/llm.py::LLMClient.chat_json"]},
+        {"id":"coc-15","category":"concept","query":"deterministic state guardrails","gold_nodes":["backend/app/services/guardrails.py::validate_state_delta"]},
+        {"id":"coc-16","category":"mixed","query":"KeeperSupervisor commit state","gold_nodes":["backend/app/services/agents/supervisor.py::KeeperSupervisor._commit_state"]},
+        {"id":"coc-17","category":"mixed","query":"ContextAgent parse intent","gold_nodes":["backend/app/services/agents/context_agent.py::ContextAgent._parse_intent"]},
+        {"id":"coc-18","category":"mixed","query":"GameAssistantAgent retrieve","gold_nodes":["backend/app/services/assistant_agent.py::GameAssistantAgent.retrieve"]},
+        {"id":"coc-19","category":"mixed","query":"monitor trace recorder","gold_nodes":["backend/app/services/agent_monitor.py::AgentTraceRecorder"]},
+        {"id":"coc-20","category":"mixed","query":"default scenario importer","gold_nodes":["backend/app/services/importer.py::import_default_content"]}
+      ],
+      "relations": [
+        {"id":"coc-r01","relation":"callers_of","target":"backend/app/services/retrieval.py::RetrievalService.query","anchor_query":"retrieval query","anchor_node":"backend/app/services/retrieval.py::RetrievalService.query","gold_nodes":["backend/app/api.py::build_monitor_record_query","backend/app/api.py::build_session_out"]},
+        {"id":"coc-r02","relation":"callees_of","target":"backend/app/services/agents/supervisor.py::KeeperSupervisor.run_turn","anchor_query":"supervisor run turn","anchor_node":"backend/app/services/agents/supervisor.py::KeeperSupervisor.run_turn","gold_nodes":["backend/app/services/debug_events.py::emit_debug","backend/app/services/guardrails.py::validate_state_delta"]},
+        {"id":"coc-r03","relation":"children_of","target":"backend/app/services/agents/supervisor.py::KeeperSupervisor","anchor_query":"KeeperSupervisor class","anchor_node":"backend/app/services/agents/supervisor.py::KeeperSupervisor","gold_nodes":["backend/app/services/agents/supervisor.py::KeeperSupervisor.run_turn","backend/app/services/agents/supervisor.py::KeeperSupervisor._commit_state"]},
+        {"id":"coc-r04","relation":"references_to","target":"backend/app/services/llm.py::LLMClient.chat_json","anchor_query":"LLM JSON callers","anchor_node":"backend/app/services/llm.py::LLMClient.chat_json","gold_nodes":["backend/app/services/agents/planner_agent.py::PlannerAgent._run_impl","backend/app/services/agents/guard_agent.py::GuardAgent._run_reflection"]},
+        {"id":"coc-r05","relation":"children_of","target":"backend/app/services/assistant_agent.py::GameAssistantAgent","anchor_query":"GameAssistantAgent methods","anchor_node":"backend/app/services/assistant_agent.py::GameAssistantAgent","gold_nodes":["backend/app/services/assistant_agent.py::GameAssistantAgent.retrieve","backend/app/services/assistant_agent.py::GameAssistantAgent.expand_queries"]},
+        {"id":"coc-r06","relation":"callees_of","target":"backend/app/services/agents/context_agent.py::ContextAgent._parse_intent","anchor_query":"context intent parsing","anchor_node":"backend/app/services/agents/context_agent.py::ContextAgent._parse_intent","gold_nodes":["backend/app/services/llm.py::LLMClient.chat_json"]}
+      ],
+      "qa": [
+        {"id":"coc-q01","question":"Coc-lite 的核心回合由哪个 supervisor 编排？","reference":"KeeperSupervisor.run_turn 编排上下文、计划、执行、叙事、守卫和状态提交。","search_query":"supervisor run turn orchestration","gold_nodes":["backend/app/services/agents/supervisor.py::KeeperSupervisor.run_turn"]},
+        {"id":"coc-q02","question":"检索服务的 query 负责什么？","reference":"RetrievalService.query 从 Chroma 集合按查询向量和过滤条件返回检索结果。","search_query":"RetrievalService query","gold_nodes":["backend/app/services/retrieval.py::RetrievalService.query"]},
+        {"id":"coc-q03","question":"GameAssistantAgent 有哪些语义增强步骤？","reference":"它支持查询扩展和 HyDE，再进行检索与回答。","search_query":"GameAssistantAgent expand queries HyDE","gold_nodes":["backend/app/services/assistant_agent.py::GameAssistantAgent.expand_queries","backend/app/services/assistant_agent.py::GameAssistantAgent.generate_hyde"]},
+        {"id":"coc-q04","question":"LLMClient 如何处理结构化 JSON？","reference":"LLMClient.chat_json 调用模型并解析结构化 JSON，失败时使用错误处理。","search_query":"LLMClient chat_json","gold_nodes":["backend/app/services/llm.py::LLMClient.chat_json"]},
+        {"id":"coc-q05","question":"GuardAgent 的 reflection 用于什么？","reference":"GuardAgent 复核剧情、规则、状态和防剧透约束。","search_query":"GuardAgent reflection","gold_nodes":["backend/app/services/agents/guard_agent.py::GuardAgent._run_reflection"]},
+        {"id":"coc-q06","question":"调试事件如何被发送？","reference":"emit_debug 规范化元数据并把调试事件发送给当前回合的调试流。","search_query":"emit_debug debug events","gold_nodes":["backend/app/services/debug_events.py::emit_debug"]}
+      ]
+    }
+  },
+  "routing": [
+    {"id":"route-01","query":"python/mini_claude/tools.py::check_permission","label":"fts"},
+    {"id":"route-02","query":"RetrievalService.query","label":"fts"},
+    {"id":"route-03","query":"backend/app/services/retrieval.py","label":"fts"},
+    {"id":"route-04","query":"Agent.chat","label":"fts"},
+    {"id":"route-05","query":"incremental code graph refresh","label":"hybrid"},
+    {"id":"route-06","query":"RAG context retrieval flow","label":"hybrid"},
+    {"id":"route-07","query":"embedding cache refresh","label":"hybrid"},
+    {"id":"route-08","query":"OpenAI streaming tool calls","label":"hybrid"},
+    {"id":"route-09","query":"check_permission 的 callers_of","label":"graph_exact"},
+    {"id":"route-10","query":"RetrievalService.query 的调用者","label":"graph_exact"},
+    {"id":"route-11","query":"KeeperSupervisor 的 children_of","label":"graph_exact"},
+    {"id":"route-12","query":"LLMClient.chat_json references_to","label":"graph_exact"},
+    {"id":"route-13","query":"哪些组件依赖检索服务","label":"hybrid_graph"},
+    {"id":"route-14","query":"谁调用 supervisor 的主回合流程","label":"hybrid_graph"},
+    {"id":"route-15","query":"哪些模块引用 LLM JSON 方法","label":"hybrid_graph"},
+    {"id":"route-16","query":"检索流程的上下游关系","label":"hybrid_graph"},
+    {"id":"route-17","query":"快速排序的平均复杂度","label":"no_code_search"},
+    {"id":"route-18","query":"二叉树遍历的时间复杂度","label":"no_code_search"},
+    {"id":"route-19","query":"TCP 三次握手为什么需要三次","label":"no_code_search"},
+    {"id":"route-20","query":"斐波那契数列公式","label":"no_code_search"},
+    {"id":"route-21","query":"python/mini_claude/_impact","label":"fts"},
+    {"id":"route-22","query":"GameAssistantAgent.retrieve","label":"fts"},
+    {"id":"route-23","query":"backend/app/services/llm.py::LLMClient","label":"fts"},
+    {"id":"route-24","query":"frontend/src/App.tsx","label":"fts"},
+    {"id":"route-25","query":"代码图的增量更新策略","label":"hybrid"},
+    {"id":"route-26","query":"助手如何做 HyDE 查询扩展","label":"hybrid"},
+    {"id":"route-27","query":"OpenAI-compatible embedding cache","label":"hybrid"},
+    {"id":"route-28","query":"agent turn context retrieval","label":"hybrid"},
+    {"id":"route-29","query":"Agent.chat 的 callees_of","label":"graph_exact"},
+    {"id":"route-30","query":"GameAssistantAgent children_of","label":"graph_exact"},
+    {"id":"route-31","query":"emit_debug 的 references_to","label":"graph_exact"},
+    {"id":"route-32","query":"PlannerAgent 的 callers_of","label":"graph_exact"},
+    {"id":"route-33","query":"哪些函数调用检索服务","label":"hybrid_graph"},
+    {"id":"route-34","query":"谁引用 GuardAgent 的 JSON 调用","label":"hybrid_graph"},
+    {"id":"route-35","query":"代码图搜索结果的上下游","label":"hybrid_graph"},
+    {"id":"route-36","query":"哪些模块继承基础 Agent","label":"hybrid_graph"},
+    {"id":"route-37","query":"HTTP 缓存控制头是什么","label":"no_code_search"},
+    {"id":"route-38","query":"什么是 CAP 定理","label":"no_code_search"},
+    {"id":"route-39","query":"正则表达式贪婪匹配规则","label":"no_code_search"},
+    {"id":"route-40","query":"数据库事务隔离级别","label":"no_code_search"}
+  ],
+  "out_of_repo": [
+    {"id":"out-01","question":"什么是快速排序的平均时间复杂度？","reference":"快速排序平均时间复杂度是 O(n log n)，最坏情况是 O(n^2)。"},
+    {"id":"out-02","question":"TCP 三次握手的三个步骤是什么？","reference":"客户端发送 SYN，服务器回复 SYN-ACK，客户端发送 ACK，随后建立连接。"},
+    {"id":"out-03","question":"Python 生成器和列表有什么核心区别？","reference":"生成器惰性地产生元素并节省内存，列表立即创建并保存全部元素。"},
+    {"id":"out-04","question":"什么是二叉搜索树的中序遍历性质？","reference":"对合法二叉搜索树做中序遍历会按升序访问节点。"}
+  ]
+}

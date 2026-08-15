@@ -1,0 +1,1310 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-08-15T17:23:05.423283+00:00",
+  "models": {
+    "chat": "gpt-5.6-terra",
+    "embedding": "qwen3.7-text-embedding"
+  },
+  "live": true,
+  "retrieval_only": false,
+  "repositories": [
+    {
+      "name": "mini",
+      "snapshot": {
+        "source_files": 26,
+        "corpus_sha256": "529d9f8bbb0272d553bbc7951552db687fec20fac28a12d54866b8df6b74e3b7",
+        "git": {
+          "commit": "f140292e8ff0c92d199a3ac01fb777f06662ca13",
+          "dirty": true
+        }
+      },
+      "validation_errors": [],
+      "file_metrics": {
+        "grep_file": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.8,
+          "recall_at_5": 0.8,
+          "mrr_at_10": 0.5266666666666666
+        },
+        "fts": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.55,
+          "recall_at_5": 0.525,
+          "mrr_at_10": 0.55
+        },
+        "semantic": {
+          "samples": 20,
+          "errors": 6,
+          "hit_at_5": 0.7,
+          "recall_at_5": 0.7,
+          "mrr_at_10": 0.675
+        },
+        "hybrid": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.9,
+          "recall_at_5": 0.9,
+          "mrr_at_10": 0.825
+        }
+      },
+      "node_metrics": {
+        "fts": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.5,
+          "recall_at_5": 0.5,
+          "mrr_at_10": 0.5
+        },
+        "semantic": {
+          "samples": 20,
+          "errors": 6,
+          "hit_at_5": 0.65,
+          "recall_at_5": 0.625,
+          "mrr_at_10": 0.5916666666666667
+        },
+        "hybrid": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.8,
+          "recall_at_5": 0.8,
+          "mrr_at_10": 0.7166666666666667
+        }
+      },
+      "relation_metrics": {
+        "graph_exact": {
+          "samples": 6,
+          "errors": 0,
+          "hit_at_5": 0.8333333333333334,
+          "recall_at_5": 0.75,
+          "mrr_at_10": 0.5833333333333334,
+          "anchor_hit_rate": 1.0,
+          "neighbor_recall_at_5": 0.75,
+          "end_to_end_success_rate": 0.8333333333333334
+        },
+        "hybrid_graph": {
+          "samples": 6,
+          "errors": 0,
+          "hit_at_5": 0.8333333333333334,
+          "recall_at_5": 0.75,
+          "mrr_at_10": 0.5833333333333334,
+          "anchor_hit_rate": 1.0,
+          "neighbor_recall_at_5": 0.75,
+          "end_to_end_success_rate": 0.8333333333333334
+        }
+      },
+      "ablation": {
+        "fts_to_hybrid": {
+          "hit_at_5": {
+            "delta": 0.3,
+            "ci95_low": 0.1,
+            "ci95_high": 0.5
+          },
+          "recall_at_5": {
+            "delta": 0.3,
+            "ci95_low": 0.1,
+            "ci95_high": 0.5
+          },
+          "mrr_at_10": {
+            "delta": 0.21666666666666665,
+            "ci95_low": 0.06666666666666667,
+            "ci95_high": 0.39166666666666666
+          }
+        },
+        "graph_exact_to_hybrid_graph": {
+          "hit_at_5": {
+            "delta": 0.0,
+            "ci95_low": 0.0,
+            "ci95_high": 0.0
+          },
+          "recall_at_5": {
+            "delta": 0.0,
+            "ci95_low": 0.0,
+            "ci95_high": 0.0
+          },
+          "mrr_at_10": {
+            "delta": 0.0,
+            "ci95_low": 0.0,
+            "ci95_high": 0.0
+          }
+        }
+      },
+      "latency_ms": {
+        "grep_file": {
+          "samples": 20,
+          "p50": 7.044050005788449,
+          "p95": 8.811149993562141,
+          "errors": 0
+        },
+        "fts": {
+          "samples": 20,
+          "p50": 101.80905000015628,
+          "p95": 109.85744499921566,
+          "errors": 0
+        },
+        "semantic": {
+          "samples": 14,
+          "p50": 481.0060500021791,
+          "p95": 5017.834410002977,
+          "errors": 6
+        },
+        "hybrid": {
+          "samples": 20,
+          "p50": 495.7732499970007,
+          "p95": 6454.086009995088,
+          "errors": 0
+        },
+        "graph_exact": {
+          "samples": 6,
+          "p50": 99.6346000029007,
+          "p95": 103.21647499949904,
+          "errors": 0
+        },
+        "hybrid_graph": {
+          "samples": 6,
+          "p50": 580.3898500016658,
+          "p95": 653.0778000123973,
+          "errors": 0
+        }
+      },
+      "cold_start_ms": {
+        "index_build": {
+          "latency_ms": 801.3047999993432,
+          "error": null,
+          "index": {
+            "mode": "full",
+            "updated_files": 26,
+            "deleted_files": 0,
+            "skipped_files": 0
+          }
+        },
+        "embedding_backfill": {
+          "latency_ms": 20716.03850000247,
+          "error": "embedding_error",
+          "embedding": null
+        }
+      },
+      "generation": {
+        "summary": {
+          "grep_file": {
+            "samples": 5,
+            "errors": 1,
+            "faithfulness": 0.9333333333333333,
+            "answer_relevancy": 0.8262515246248633,
+            "latency_p50_ms": 16743.21259999124,
+            "latency_p95_ms": 21527.86504001124
+          },
+          "fts": {
+            "samples": 4,
+            "errors": 2,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.902432580405802,
+            "latency_p50_ms": 12642.110900007538,
+            "latency_p95_ms": 16105.29308001278
+          },
+          "hybrid": {
+            "samples": 5,
+            "errors": 1,
+            "faithfulness": 0.9666666666666666,
+            "answer_relevancy": 0.8290759730326837,
+            "latency_p50_ms": 18967.314099980285,
+            "latency_p95_ms": 43302.41674000572
+          }
+        },
+        "phase_latency_ms": {
+          "retrieval": {
+            "samples": 14,
+            "p50": 113.62279999593738,
+            "p95": 14287.081009995009
+          },
+          "generation": {
+            "samples": 14,
+            "p50": 7130.890100001125,
+            "p95": 12099.328195009002
+          },
+          "evaluation": {
+            "samples": 14,
+            "p50": 6183.765950001543,
+            "p95": 13180.961995001417
+          },
+          "end_to_end": {
+            "samples": 14,
+            "p50": 16079.70700001897,
+            "p95": 31513.044130010523
+          }
+        },
+        "rows": [
+          {
+            "case_id": "mini-q01",
+            "strategy": "grep_file",
+            "answer_sha256": "d578e4f7a2b41c6961fbf439ad4ec673da72d5d10843e3e1958cf98be9b25a00",
+            "citations": [
+              "python/mini_claude/agent.py",
+              "python/mini_claude/tools.py",
+              "python/mini_claude/prompt.py"
+            ],
+            "faithfulness": 0.6666666666666666,
+            "answer_relevancy": 0.8019324957381038,
+            "latency_ms": {
+              "retrieval": 156.64320001087617,
+              "generation": 6838.321799994446,
+              "evaluation": 12509.737000000314,
+              "judge_chat": 12098.13439998834,
+              "end_to_end": 19504.702000005636
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q01",
+            "strategy": "fts",
+            "error": "provider_connection_error"
+          },
+          {
+            "case_id": "mini-q01",
+            "strategy": "hybrid",
+            "answer_sha256": "4db2afcd445d4a4664aa40256d1920c0f9223a008287d2d00f539ec8d30dd3a2",
+            "citations": [
+              "python/mini_claude/tools.py::get_deferred_tool_names",
+              "python/mini_claude/tools.py::reset_activated_tools",
+              "python/tests/test_code_graph_tool.py::CodeGraphToolContractTests.test_code_graph_is_deferred_read_tool_with_expected_schema",
+              "python/mini_claude/tools.py::get_active_tool_definitions",
+              "python/mini_claude/agent.py::Agent._on_tool_block"
+            ],
+            "faithfulness": 0.8333333333333334,
+            "answer_relevancy": 0.7871813209271633,
+            "latency_ms": {
+              "retrieval": 31286.963000005926,
+              "generation": 10943.6929999938,
+              "evaluation": 6311.481900003855,
+              "judge_chat": 5986.7677000002,
+              "end_to_end": 48542.13790000358
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q02",
+            "strategy": "grep_file",
+            "answer_sha256": "b45fada888273ee4c160ee8423eeb18be5ee7412688e333df2d75b05b412cb0b",
+            "citations": [
+              "python/tests/test_code_graph_tool.py",
+              "python/mini_claude/tools.py",
+              "python/mini_claude/_code_graph_search.py",
+              "python/mini_claude/code_graph.py",
+              "python/mini_claude/subagent.py"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8168215825993989,
+            "latency_ms": {
+              "retrieval": 6.069900002330542,
+              "generation": 12483.68340000161,
+              "evaluation": 9543.902500008699,
+              "judge_chat": 9222.95190001023,
+              "end_to_end": 22033.65580001264
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q02",
+            "strategy": "fts",
+            "answer_sha256": "05f893418ea64336b1fac0b37a66b48847de6d1d5d0afe39fb47122c7114c66e",
+            "citations": [],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8607850969494292,
+            "latency_ms": {
+              "retrieval": 114.042299988796,
+              "generation": 5775.631200012867,
+              "evaluation": 5381.362599990098,
+              "judge_chat": 5050.020499998936,
+              "end_to_end": 11271.036099991761
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q02",
+            "strategy": "hybrid",
+            "error": "provider_http_502"
+          },
+          {
+            "case_id": "mini-q03",
+            "strategy": "grep_file",
+            "error": "provider_http_502"
+          },
+          {
+            "case_id": "mini-q03",
+            "strategy": "fts",
+            "error": "provider_http_502"
+          },
+          {
+            "case_id": "mini-q03",
+            "strategy": "hybrid",
+            "answer_sha256": "7be6c83d866af1596b06b21b3696f679a90715bd8cdbfd30d942c1bad21472b4",
+            "citations": [],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.9370345612769202,
+            "latency_ms": {
+              "retrieval": 5133.298399989144,
+              "generation": 4470.453100002487,
+              "evaluation": 9363.562599988654,
+              "judge_chat": 8025.622800007113,
+              "end_to_end": 18967.314099980285
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q04",
+            "strategy": "grep_file",
+            "answer_sha256": "843617e74029e7c9a47660f065187360103b7471132872de35729f653f63f02a",
+            "citations": [
+              "python/mini_claude/agent.py",
+              "python/mini_claude/tools.py",
+              "python/mini_claude/prompt.py"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8153135146298022,
+            "latency_ms": {
+              "retrieval": 5.982499991660006,
+              "generation": 7427.353999999468,
+              "evaluation": 5743.2896999962395,
+              "judge_chat": 5390.801799992914,
+              "end_to_end": 13176.626199987368
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q04",
+            "strategy": "fts",
+            "answer_sha256": "ddeb0bd5a2913aeecf9fb758b6dbfdab40caec0360200861d68a9f024150aa0a",
+            "citations": [],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.9151656674897266,
+            "latency_ms": {
+              "retrieval": 112.3521000117762,
+              "generation": 8727.079500007676,
+              "evaluation": 5173.754100003862,
+              "judge_chat": 4860.643899999559,
+              "end_to_end": 14013.185700023314
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q04",
+            "strategy": "hybrid",
+            "answer_sha256": "2e2611b49ca48edb93fb25b3e4f71dfe238b4baf0e5aa8aff6561894691e4f09",
+            "citations": [
+              "python/mini_claude/agent.py::Agent._call_openai_stream",
+              "python/mini_claude/agent.py::Agent._call_anthropic_stream",
+              "python/mini_claude/agent.py::Agent._chat_openai"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.835423483161929,
+            "latency_ms": {
+              "retrieval": 492.55100000300445,
+              "generation": 7423.458400007803,
+              "evaluation": 14427.522700003465,
+              "judge_chat": 14036.206099990522,
+              "end_to_end": 22343.532100014272
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q05",
+            "strategy": "grep_file",
+            "answer_sha256": "c297d362b67a988e4073bcfc192802f05c9973dc87b5a6c9a85482c7787614e1",
+            "citations": [
+              "python/tests/test_code_graph_tool.py",
+              "python/mini_claude/code_graph.py",
+              "python/mini_claude/agent.py",
+              "python/tests/test_autonomy_flow.py",
+              "python/mini_claude/subagent.py"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.9177506378450476,
+            "latency_ms": {
+              "retrieval": 7.179799998993985,
+              "generation": 5351.1645999969915,
+              "evaluation": 11384.868199995253,
+              "judge_chat": 11006.941899991944,
+              "end_to_end": 16743.21259999124
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q05",
+            "strategy": "fts",
+            "answer_sha256": "01caab651a92b5c6e66cc3112368aba7939d1b7ed417435b3a9d9e3d204596a0",
+            "citations": [],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.9619395786419691,
+            "latency_ms": {
+              "retrieval": 113.20330000307877,
+              "generation": 11892.367700012983,
+              "evaluation": 4468.917499994859,
+              "judge_chat": 4140.810800003237,
+              "end_to_end": 16474.48850001092
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q05",
+            "strategy": "hybrid",
+            "answer_sha256": "b74490b11b160b43387ceed9f3c9746cfabbe6b36c49abccff6843d8678f0fb4",
+            "citations": [
+              "python/tests/test_code_graph_tool.py::CodeGraphBehaviorTests.test_incremental_refresh_and_two_hop_change_impact",
+              "python/mini_claude/code_graph.py::_impact",
+              "python/tests/test_code_graph_tool.py::CodeGraphBehaviorTests.test_impact_tracks_both_sides_of_a_git_rename",
+              "python/tests/test_autonomy_flow.py::TestTwoStageFlow",
+              "python/tests/test_autonomy_flow.py::TestTwoStageFlow.test_fast_path_skips_classifier"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8238410249401221,
+            "latency_ms": {
+              "retrieval": 514.8086999979569,
+              "generation": 4742.801000000327,
+              "evaluation": 6056.049999999232,
+              "judge_chat": 4626.485900007538,
+              "end_to_end": 11313.659699997515
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q06",
+            "strategy": "grep_file",
+            "answer_sha256": "ec7b0a562a2b1c4d289c0c7ccc36183697d5d2420ce3f6e3b5725c0df269717f",
+            "citations": [
+              "python/tests/test_code_graph_tool.py",
+              "python/mini_claude/_code_graph_embeddings.py",
+              "python/mini_claude/agent.py",
+              "python/mini_claude/autonomy.py",
+              "python/mini_claude/tools.py"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.7794393923119637,
+            "latency_ms": {
+              "retrieval": 6.006099996739067,
+              "generation": 4229.989300001762,
+              "evaluation": 5478.882900002645,
+              "judge_chat": 5092.62260000105,
+              "end_to_end": 9714.878300001146
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q06",
+            "strategy": "fts",
+            "answer_sha256": "e7ab20bfbace956cf0086cbb2a7998313298ce7ba736b2906f0c507b7dc3a5a3",
+            "citations": [],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8718399785420833,
+            "latency_ms": {
+              "retrieval": 106.55539999424946,
+              "generation": 3102.1350999944843,
+              "evaluation": 7113.808200010681,
+              "judge_chat": 3744.3534000049112,
+              "end_to_end": 10322.498699999414
+            },
+            "error": null
+          },
+          {
+            "case_id": "mini-q06",
+            "strategy": "hybrid",
+            "answer_sha256": "f74dfd351607e99dcb81896cc0fff76633a6f20bcb4a8563f32af6a7ec353e98",
+            "citations": [
+              "python/mini_claude/_dotenv.py::load_dotenv",
+              "python/mini_claude/_dotenv.py::_env_path",
+              "python/mini_claude/_dotenv.py",
+              "python/mini_claude/_dotenv.py::dotenv_values",
+              "python/tests/test_code_graph_tool.py::CodeGraphBehaviorTests.test_process_environment_overrides_source_dotenv"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.7618994748572842,
+            "latency_ms": {
+              "retrieval": 3455.5039000115357,
+              "generation": 7604.739900009008,
+              "evaluation": 4624.681700006477,
+              "judge_chat": 4249.192200004472,
+              "end_to_end": 15684.92550002702
+            },
+            "error": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "coc-lite",
+      "snapshot": {
+        "source_files": 79,
+        "corpus_sha256": "feb64441e0c940f98da0ace766355772dbf45e13157bd3d8f71c20a8ba4b0ad2",
+        "git": {
+          "commit": "0e29f8383f186c2766c21f1287dfc8cb77f59950",
+          "dirty": true
+        }
+      },
+      "validation_errors": [],
+      "file_metrics": {
+        "grep_file": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.65,
+          "recall_at_5": 0.6333333333333333,
+          "mrr_at_10": 0.31166666666666665
+        },
+        "fts": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.75,
+          "recall_at_5": 0.75,
+          "mrr_at_10": 0.75
+        },
+        "semantic": {
+          "samples": 20,
+          "errors": 4,
+          "hit_at_5": 0.75,
+          "recall_at_5": 0.7333333333333333,
+          "mrr_at_10": 0.725
+        },
+        "hybrid": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.85,
+          "recall_at_5": 0.8333333333333334,
+          "mrr_at_10": 0.85
+        }
+      },
+      "node_metrics": {
+        "fts": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.65,
+          "recall_at_5": 0.65,
+          "mrr_at_10": 0.6125
+        },
+        "semantic": {
+          "samples": 20,
+          "errors": 4,
+          "hit_at_5": 0.75,
+          "recall_at_5": 0.7333333333333333,
+          "mrr_at_10": 0.675
+        },
+        "hybrid": {
+          "samples": 20,
+          "errors": 0,
+          "hit_at_5": 0.85,
+          "recall_at_5": 0.8333333333333334,
+          "mrr_at_10": 0.75
+        }
+      },
+      "relation_metrics": {
+        "graph_exact": {
+          "samples": 6,
+          "errors": 0,
+          "hit_at_5": 0.8333333333333334,
+          "recall_at_5": 0.6666666666666666,
+          "mrr_at_10": 0.33055555555555555,
+          "anchor_hit_rate": 1.0,
+          "neighbor_recall_at_5": 0.6666666666666666,
+          "end_to_end_success_rate": 0.8333333333333334
+        },
+        "hybrid_graph": {
+          "samples": 6,
+          "errors": 0,
+          "hit_at_5": 0.8333333333333334,
+          "recall_at_5": 0.6666666666666666,
+          "mrr_at_10": 0.33055555555555555,
+          "anchor_hit_rate": 1.0,
+          "neighbor_recall_at_5": 0.6666666666666666,
+          "end_to_end_success_rate": 0.8333333333333334
+        }
+      },
+      "ablation": {
+        "fts_to_hybrid": {
+          "hit_at_5": {
+            "delta": 0.2,
+            "ci95_low": 0.05,
+            "ci95_high": 0.4
+          },
+          "recall_at_5": {
+            "delta": 0.18333333333333332,
+            "ci95_low": 0.03333333333333333,
+            "ci95_high": 0.36666666666666664
+          },
+          "mrr_at_10": {
+            "delta": 0.1375,
+            "ci95_low": 0.0375,
+            "ci95_high": 0.2625
+          }
+        },
+        "graph_exact_to_hybrid_graph": {
+          "hit_at_5": {
+            "delta": 0.0,
+            "ci95_low": 0.0,
+            "ci95_high": 0.0
+          },
+          "recall_at_5": {
+            "delta": 0.0,
+            "ci95_low": 0.0,
+            "ci95_high": 0.0
+          },
+          "mrr_at_10": {
+            "delta": 0.0,
+            "ci95_low": 0.0,
+            "ci95_high": 0.0
+          }
+        }
+      },
+      "latency_ms": {
+        "grep_file": {
+          "samples": 20,
+          "p50": 17.74180000211345,
+          "p95": 19.338459999562474,
+          "errors": 0
+        },
+        "fts": {
+          "samples": 20,
+          "p50": 124.70779999421211,
+          "p95": 133.72880500901374,
+          "errors": 0
+        },
+        "semantic": {
+          "samples": 16,
+          "p50": 550.349749995803,
+          "p95": 3548.251424999762,
+          "errors": 4
+        },
+        "hybrid": {
+          "samples": 20,
+          "p50": 548.7824000010733,
+          "p95": 6946.232965000674,
+          "errors": 0
+        },
+        "graph_exact": {
+          "samples": 6,
+          "p50": 121.93280000064988,
+          "p95": 129.52552500064485,
+          "errors": 0
+        },
+        "hybrid_graph": {
+          "samples": 6,
+          "p50": 705.8447000017622,
+          "p95": 4388.222199999291,
+          "errors": 0
+        }
+      },
+      "cold_start_ms": {
+        "index_build": {
+          "latency_ms": 1104.2704999999842,
+          "error": null,
+          "index": {
+            "mode": "full",
+            "updated_files": 79,
+            "deleted_files": 0,
+            "skipped_files": 0
+          }
+        },
+        "embedding_backfill": {
+          "latency_ms": 9079.968399993959,
+          "error": "embedding_error",
+          "embedding": null
+        }
+      },
+      "generation": {
+        "summary": {
+          "grep_file": {
+            "samples": 6,
+            "errors": 0,
+            "faithfulness": 0.9629629629629629,
+            "answer_relevancy": 0.7509228379191403,
+            "latency_p50_ms": 16236.603350000223,
+            "latency_p95_ms": 27555.66629999521
+          },
+          "fts": {
+            "samples": 4,
+            "errors": 2,
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.9038458715383666,
+            "latency_p50_ms": 11144.029900009627,
+            "latency_p95_ms": 11809.232480008359
+          },
+          "hybrid": {
+            "samples": 5,
+            "errors": 1,
+            "faithfulness": 0.7714285714285715,
+            "answer_relevancy": 0.7927539385607816,
+            "latency_p50_ms": 21515.79470001161,
+            "latency_p95_ms": 49773.22943999606
+          }
+        },
+        "phase_latency_ms": {
+          "retrieval": {
+            "samples": 15,
+            "p50": 144.50910000596195,
+            "p95": 16754.434419996654
+          },
+          "generation": {
+            "samples": 15,
+            "p50": 5034.667300002184,
+            "p95": 12623.013670000362
+          },
+          "evaluation": {
+            "samples": 15,
+            "p50": 7267.781300004572,
+            "p95": 13050.244250000098
+          },
+          "end_to_end": {
+            "samples": 15,
+            "p50": 15965.450499992585,
+            "p95": 38723.374459997256
+          }
+        },
+        "rows": [
+          {
+            "case_id": "coc-q01",
+            "strategy": "grep_file",
+            "answer_sha256": "4aceca48a5362f76b00af865d94e093236ac5084baaea1ce9dcaa84fac722195",
+            "citations": [
+              "backend/app/services/agent.py",
+              "backend/app/api.py",
+              "frontend/src/monitor.tsx",
+              "backend/app/services/agent_monitor.py",
+              "backend/app/services/agents/supervisor.py"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.5802943727134268,
+            "latency_ms": {
+              "retrieval": 292.50080000201706,
+              "generation": 4801.122199991369,
+              "evaluation": 6294.677700003376,
+              "judge_chat": 4822.93410001148,
+              "end_to_end": 11388.300699996762
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q01",
+            "strategy": "fts",
+            "answer_sha256": "764c913824bc9efe2bff4af8923de3792333141804a97ad4e647589eaedba047",
+            "citations": [],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.937658339033789,
+            "latency_ms": {
+              "retrieval": 763.2904999918537,
+              "generation": 4483.356500000809,
+              "evaluation": 4895.23619999818,
+              "judge_chat": 4484.814800001914,
+              "end_to_end": 10141.883199990843
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q01",
+            "strategy": "hybrid",
+            "answer_sha256": "7faed7453922b23d164c52b84c024ffcbda52d8b220a022e04ccda2bc892a9fe",
+            "citations": [],
+            "faithfulness": 0.0,
+            "answer_relevancy": 0.9104983819051636,
+            "latency_ms": {
+              "retrieval": 5335.380800010171,
+              "generation": 2872.125900001265,
+              "evaluation": 6968.596900012926,
+              "judge_chat": 3624.4142999930773,
+              "end_to_end": 15176.103600024362
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q02",
+            "strategy": "grep_file",
+            "answer_sha256": "83269dd6e1324fc8cfaf3d478a1c935840316b83f2e50e766167995b644ef35b",
+            "citations": [
+              "backend/app/api.py",
+              "backend/app/services/skills/common.py",
+              "backend/app/services/agents/context_agent.py",
+              "backend/app/services/agent.py",
+              "backend/app/services/retrieval.py"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.6659946290681836,
+            "latency_ms": {
+              "retrieval": 20.006499995361082,
+              "generation": 13499.594900000375,
+              "evaluation": 17500.105400002212,
+              "judge_chat": 17174.172200000612,
+              "end_to_end": 31019.706799997948
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q02",
+            "strategy": "fts",
+            "error": "provider_connection_error"
+          },
+          {
+            "case_id": "coc-q02",
+            "strategy": "hybrid",
+            "answer_sha256": "9db5b33a702d41fdfcfaa08c05f1e04b38d62d453841c87d48b309c5ae77d211",
+            "citations": [
+              "backend/app/services/retrieval.py::RetrievalService.query"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.7145417312290413,
+            "latency_ms": {
+              "retrieval": 7590.376599997398,
+              "generation": 6152.874700012035,
+              "evaluation": 7772.543400002178,
+              "judge_chat": 6418.2018999999855,
+              "end_to_end": 21515.79470001161
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q03",
+            "strategy": "grep_file",
+            "answer_sha256": "656c3d48092cf637ba3f632c74104c8e62c6a29232d6a12ea6a024a32db5eef9",
+            "citations": [
+              "backend/app/services/assistant_agent.py",
+              "backend/app/api.py",
+              "backend/app/services/assistant_prompts.py",
+              "backend/app/schemas.py",
+              "frontend/src/api.ts"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.7993861924843509,
+            "latency_ms": {
+              "retrieval": 16.759199992520735,
+              "generation": 6579.331500004628,
+              "evaluation": 9369.359799995436,
+              "judge_chat": 8002.088300010655,
+              "end_to_end": 15965.450499992585
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q03",
+            "strategy": "fts",
+            "answer_sha256": "35210788ced1528aa4e7de8bb68e6793a4de1fef93826da757519bdf333ea125",
+            "citations": [],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.9775924270353054,
+            "latency_ms": {
+              "retrieval": 141.68939999944996,
+              "generation": 3597.275300009642,
+              "evaluation": 7267.781300004572,
+              "judge_chat": 5995.464400009951,
+              "end_to_end": 11006.746000013663
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q03",
+            "strategy": "hybrid",
+            "error": "provider_connection_error"
+          },
+          {
+            "case_id": "coc-q04",
+            "strategy": "grep_file",
+            "answer_sha256": "713535904b178a4de0b6248bf56419b93c408a47da663624ec5379c37d9b5854",
+            "citations": [
+              "backend/app/api.py",
+              "backend/app/services/llm.py",
+              "frontend/src/api.ts",
+              "backend/app/models.py",
+              "backend/app/services/prompt_config.py"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8083933507826502,
+            "latency_ms": {
+              "retrieval": 17.14670000365004,
+              "generation": 7386.392000000342,
+              "evaluation": 9104.21750000387,
+              "judge_chat": 5753.908799990313,
+              "end_to_end": 16507.75620000786
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q04",
+            "strategy": "fts",
+            "answer_sha256": "69fb5e8dbe66719c41a24534289d5616b0d385f520e4c3087d2678101f213fed",
+            "citations": [
+              "backend/app/services/llm.py::LLMClient.chat_json"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8124042624503146,
+            "latency_ms": {
+              "retrieval": 133.25690000783652,
+              "generation": 5032.833400007803,
+              "evaluation": 6736.304299993208,
+              "judge_chat": 6382.637300004717,
+              "end_to_end": 11902.394600008847
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q04",
+            "strategy": "hybrid",
+            "answer_sha256": "a07636a4ffe784cb58b9a47af162aee21f4cc33b682c44cb2f362aff2943699b",
+            "citations": [
+              "backend/app/services/llm.py::LLMClient.chat_json"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.7792428568129455,
+            "latency_ms": {
+              "retrieval": 6008.508899991284,
+              "generation": 4920.081400006893,
+              "evaluation": 11143.160899999202,
+              "judge_chat": 9788.250799989328,
+              "end_to_end": 22071.75119999738
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q05",
+            "strategy": "grep_file",
+            "answer_sha256": "0df8e158c2eb630d9ab173529fdac84bedcaddabe330dd9479dccd6c496f2cbf",
+            "citations": [
+              "backend/app/services/agents/supervisor.py",
+              "backend/app/services/agents/guard_agent.py",
+              "backend/app/services/agent.py",
+              "backend/app/services/prompt_config.py",
+              "backend/app/services/story_state.py"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8265332085044991,
+            "latency_ms": {
+              "retrieval": 16.14490000065416,
+              "generation": 5034.667300002184,
+              "evaluation": 9729.894700009027,
+              "judge_chat": 9440.306899996358,
+              "end_to_end": 14780.706900011864
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q05",
+            "strategy": "fts",
+            "answer_sha256": "71ec66a17b32f4fbe375f65141cd7da40c2362e9a70e86166d42e9e1bad5bc7a",
+            "citations": [
+              "backend/app/services/agents/guard_agent.py::GuardAgent._run_reflection"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8877284576340573,
+            "latency_ms": {
+              "retrieval": 144.50910000596195,
+              "generation": 4071.930299993255,
+              "evaluation": 7064.874400006374,
+              "judge_chat": 6638.563199987402,
+              "end_to_end": 11281.313800005591
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q05",
+            "strategy": "hybrid",
+            "answer_sha256": "4c765a1b7a403231a1bfaf4c7d00bfed334a5e4737760ee414ca845bcaf8e545",
+            "citations": [
+              "backend/app/services/agents/guard_agent.py::GuardAgent._run_reflection"
+            ],
+            "faithfulness": 1.0,
+            "answer_relevancy": 0.8880974611391287,
+            "latency_ms": {
+              "retrieval": 5154.168800014304,
+              "generation": 5504.456499998923,
+              "evaluation": 6301.69430001115,
+              "judge_chat": 5946.207300003152,
+              "end_to_end": 16960.319600024377
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q06",
+            "strategy": "grep_file",
+            "answer_sha256": "edca7050cae9a6a5d0da218d937c915a9e991bb8af20ae8e90ed57ec6f88bf7d",
+            "citations": [
+              "backend/app/services/agent.py",
+              "backend/app/services/agents/supervisor.py",
+              "frontend/src/App.tsx",
+              "backend/app/services/skills/common.py",
+              "backend/app/services/agents/executor_agent.py"
+            ],
+            "faithfulness": 0.7777777777777778,
+            "answer_relevancy": 0.8249352739617309,
+            "latency_ms": {
+              "retrieval": 18.661099995370023,
+              "generation": 9653.180699999211,
+              "evaluation": 7491.7029999924125,
+              "judge_chat": 7090.169099988998,
+              "end_to_end": 17163.544799986994
+            },
+            "error": null
+          },
+          {
+            "case_id": "coc-q06",
+            "strategy": "fts",
+            "error": "provider_connection_error"
+          },
+          {
+            "case_id": "coc-q06",
+            "strategy": "hybrid",
+            "answer_sha256": "507102f3bf495244a6d2b1b3dc480aa82fd2f785fd9a177d1f96d07d865ed198",
+            "citations": [
+              "backend/app/services/debug_events.py::emit_debug",
+              "frontend/src/types.ts::DebugEvent",
+              "backend/app/services/debug_events.py",
+              "frontend/src/App.tsx::App.makeDebugEvent",
+              "frontend/src/App.tsx::App.appendDebugEvent"
+            ],
+            "faithfulness": 0.8571428571428571,
+            "answer_relevancy": 0.6713892617176289,
+            "latency_ms": {
+              "retrieval": 38137.23599999503,
+              "generation": 12247.33600000036,
+              "evaluation": 6314.027000000351,
+              "judge_chat": 6034.067800006596,
+              "end_to_end": 56698.59899999574
+            },
+            "error": null
+          }
+        ]
+      }
+    }
+  ],
+  "routing": {
+    "heuristic": {
+      "samples": 40,
+      "errors": 0,
+      "accuracy": 0.825,
+      "per_class_recall": {
+        "fts": 0.875,
+        "graph_exact": 1.0,
+        "hybrid": 1.0,
+        "hybrid_graph": 0.75,
+        "no_code_search": 0.5
+      },
+      "latency_p50_ms": 0.0037999925552867353,
+      "latency_p95_ms": 0.008559992420487102,
+      "confusion": {
+        "fts": {
+          "fts": 7,
+          "graph_exact": 0,
+          "hybrid": 1,
+          "hybrid_graph": 0,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "graph_exact": {
+          "fts": 0,
+          "graph_exact": 8,
+          "hybrid": 0,
+          "hybrid_graph": 0,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "hybrid": {
+          "fts": 0,
+          "graph_exact": 0,
+          "hybrid": 8,
+          "hybrid_graph": 0,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "hybrid_graph": {
+          "fts": 0,
+          "graph_exact": 0,
+          "hybrid": 2,
+          "hybrid_graph": 6,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "no_code_search": {
+          "fts": 0,
+          "graph_exact": 0,
+          "hybrid": 4,
+          "hybrid_graph": 0,
+          "no_code_search": 4,
+          "error": 0
+        }
+      }
+    },
+    "model": {
+      "samples": 40,
+      "errors": 0,
+      "accuracy": 0.45,
+      "per_class_recall": {
+        "fts": 0.0,
+        "graph_exact": 0.875,
+        "hybrid": 0.25,
+        "hybrid_graph": 0.125,
+        "no_code_search": 1.0
+      },
+      "latency_p50_ms": 2904.661299995496,
+      "latency_p95_ms": 11228.57228000066,
+      "confusion": {
+        "fts": {
+          "fts": 0,
+          "graph_exact": 6,
+          "hybrid": 0,
+          "hybrid_graph": 0,
+          "no_code_search": 2,
+          "error": 0
+        },
+        "graph_exact": {
+          "fts": 1,
+          "graph_exact": 7,
+          "hybrid": 0,
+          "hybrid_graph": 0,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "hybrid": {
+          "fts": 1,
+          "graph_exact": 1,
+          "hybrid": 2,
+          "hybrid_graph": 2,
+          "no_code_search": 2,
+          "error": 0
+        },
+        "hybrid_graph": {
+          "fts": 0,
+          "graph_exact": 7,
+          "hybrid": 0,
+          "hybrid_graph": 1,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "no_code_search": {
+          "fts": 0,
+          "graph_exact": 0,
+          "hybrid": 0,
+          "hybrid_graph": 0,
+          "no_code_search": 8,
+          "error": 0
+        }
+      }
+    },
+    "oracle": {
+      "samples": 40,
+      "errors": 0,
+      "accuracy": 1.0,
+      "per_class_recall": {
+        "fts": 1.0,
+        "graph_exact": 1.0,
+        "hybrid": 1.0,
+        "hybrid_graph": 1.0,
+        "no_code_search": 1.0
+      },
+      "latency_p50_ms": null,
+      "latency_p95_ms": null,
+      "confusion": {
+        "fts": {
+          "fts": 8,
+          "graph_exact": 0,
+          "hybrid": 0,
+          "hybrid_graph": 0,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "graph_exact": {
+          "fts": 0,
+          "graph_exact": 8,
+          "hybrid": 0,
+          "hybrid_graph": 0,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "hybrid": {
+          "fts": 0,
+          "graph_exact": 0,
+          "hybrid": 8,
+          "hybrid_graph": 0,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "hybrid_graph": {
+          "fts": 0,
+          "graph_exact": 0,
+          "hybrid": 0,
+          "hybrid_graph": 8,
+          "no_code_search": 0,
+          "error": 0
+        },
+        "no_code_search": {
+          "fts": 0,
+          "graph_exact": 0,
+          "hybrid": 0,
+          "hybrid_graph": 0,
+          "no_code_search": 8,
+          "error": 0
+        }
+      }
+    }
+  },
+  "routing_downstream": {
+    "scorecard": {
+      "fts": 0.575,
+      "hybrid": 0.825,
+      "graph_exact": 0.8333333333333334,
+      "hybrid_graph": 0.8333333333333334,
+      "no_code_search": 1.0,
+      "error": 0.0
+    },
+    "routers": {
+      "heuristic": {
+        "samples": 40,
+        "score": 0.6779166666666667,
+        "delta_vs_oracle": -0.13541666666666652
+      },
+      "model": {
+        "samples": 40,
+        "score": 0.568125,
+        "delta_vs_oracle": -0.24520833333333325
+      },
+      "oracle": {
+        "samples": 40,
+        "score": 0.8133333333333332,
+        "delta_vs_oracle": 0.0
+      }
+    }
+  },
+  "out_of_repo": {
+    "samples": 3,
+    "errors": 1,
+    "llm_correctness": 1.0,
+    "embedding_cosine": 0.8589502211610403,
+    "combined": 0.9294751105805202,
+    "latency_p50_ms": 8115.463000009186,
+    "latency_p95_ms": 15471.192880009767,
+    "rows": [
+      {
+        "case_id": "out-01",
+        "llm_correctness": 1.0,
+        "embedding_cosine": 0.9063550145365944,
+        "combined": 0.9531775072682972,
+        "answer_sha256": "44dc0c00042e28e709fb96c62aa0f03c2b75a26e56db89218d394feed1d3f54f",
+        "latency_ms": 5857.654000021284,
+        "error": null
+      },
+      {
+        "case_id": "out-02",
+        "error": "provider_connection_error"
+      },
+      {
+        "case_id": "out-03",
+        "llm_correctness": 1.0,
+        "embedding_cosine": 0.771811118055825,
+        "combined": 0.8859055590279126,
+        "answer_sha256": "56b1c0f255deb1f646a35d486e7232efd1925acc4a52e0016d8c78a3961e4164",
+        "latency_ms": 8115.463000009186,
+        "error": null
+      },
+      {
+        "case_id": "out-04",
+        "llm_correctness": 1.0,
+        "embedding_cosine": 0.8986845308907013,
+        "combined": 0.9493422654453507,
+        "answer_sha256": "1f87c51d690e95cf2f970ded06db8db7e229985b83aff3712334eaf9c5e0b0af",
+        "latency_ms": 16288.496200009831,
+        "error": null
+      }
+    ]
+  }
+}
