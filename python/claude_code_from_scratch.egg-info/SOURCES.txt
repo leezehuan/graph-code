@@ -10,6 +10,7 @@ mini_claude/__init__.py
 mini_claude/__main__.py
 mini_claude/_code_graph_embeddings.py
 mini_claude/_code_graph_search.py
+mini_claude/_dotenv.py
 mini_claude/agent.py
 mini_claude/autonomy.py
 mini_claude/code_graph.py

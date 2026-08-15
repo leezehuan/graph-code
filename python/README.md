@@ -67,14 +67,19 @@ Agent 内置了延迟加载的 `code_graph` 工具。需要理解代码结构、
 
 语义和混合模式只发送限定名、符号名、类型、父作用域、相对路径和语言等结构
 元数据，不发送函数体或完整源码。即使已配置 provider，默认 FTS5 和其他三个动作
-也不会联网。启用云端 embedding 必须显式设置：
+也不会联网。启用云端 embedding 必须显式设置。推荐在项目根目录的 `.env` 中配置（该文件已被 Git 忽略，
+可从仓库提供的 `.env.example` 复制）：
 
 ```bash
-export MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=1
-export MINI_CLAUDE_EMBEDDING_BASE_URL=https://api.example.com/v1
-export MINI_CLAUDE_EMBEDDING_MODEL=text-embedding-model
-export MINI_CLAUDE_EMBEDDING_API_KEY=sk-... # 可选
+MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=1
+MINI_CLAUDE_EMBEDDING_BASE_URL=https://api.example.com/v1
+MINI_CLAUDE_EMBEDDING_MODEL=text-embedding-model
+MINI_CLAUDE_EMBEDDING_API_KEY=sk-... # 可选
 ```
+
+启动 `mini-claude-py` 时会读取当前 Git 项目根目录的 `.env`；非 Git 目录读取当前
+工作目录的 `.env`。已有的进程环境变量优先于文件中的值。默认 `mode=fts` 和其他
+三个动作仍不会联网。
 
 向量按 endpoint 哈希和 model 隔离缓存到同一个 `code-graph.sqlite`。缓存不保存
 API key 或原始 endpoint；源码增删改时只补齐受影响节点。

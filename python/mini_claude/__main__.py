@@ -13,6 +13,7 @@ from .ui import print_welcome, print_user_prompt, print_error, print_info, print
 from .session import load_session, get_latest_session_id
 from .memory import list_memories
 from .skills import resolve_skill_prompt
+from ._dotenv import load_dotenv
 
 
 def parse_args() -> argparse.Namespace:
@@ -229,6 +230,7 @@ async def run_repl(agent: Agent) -> None:
 
 
 def main() -> None:
+    load_dotenv()
     args = parse_args()
 
     if args.help:

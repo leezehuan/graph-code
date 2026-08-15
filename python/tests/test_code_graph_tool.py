@@ -359,6 +359,83 @@ class CodeGraphBehaviorTests(unittest.TestCase):
             )
         self.assertEqual(server.requests, [])
 
+    def test_embedding_configuration_is_loaded_from_project_dotenv(self):
+        (self.repo / "app.py").write_text(
+            "def process_order():\n    return 1\n", encoding="utf-8"
+        )
+        self.commit_all()
+
+        with FakeEmbeddingServer(lambda _text: [1.0]) as server:
+            (self.repo / ".env").write_text(
+                "MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=1\n"
+                f"MINI_CLAUDE_EMBEDDING_BASE_URL={server.base_url}\n"
+                "MINI_CLAUDE_EMBEDDING_MODEL=dotenv-model\n"
+                "MINI_CLAUDE_EMBEDDING_API_KEY=dotenv-key\n",
+                encoding="utf-8",
+            )
+            with patch.dict(os.environ, embedding_environment(), clear=True):
+                result = self.call(
+                    action="search", query="orders", mode="semantic"
+                )
+                self.assertTrue(
+                    all(
+                        name not in os.environ
+                        for name in _EMBEDDING_ENVIRONMENT_VARIABLES
+                    )
+                )
+
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["data"]["embedding"]["model"], "dotenv-model")
+        self.assertTrue(server.requests)
+        self.assertEqual(server.requests[0]["authorization"], "Bearer dotenv-key")
+
+    def test_embedding_configuration_does_not_escape_project_root(self):
+        (self.repo / "app.py").write_text(
+            "def process_order():\n    return 1\n", encoding="utf-8"
+        )
+        (self.repo.parent / ".env").write_text(
+            "MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=1\n"
+            "MINI_CLAUDE_EMBEDDING_BASE_URL=https://invalid.example/v1\n"
+            "MINI_CLAUDE_EMBEDDING_MODEL=parent-model\n",
+            encoding="utf-8",
+        )
+        self.commit_all()
+
+        with patch.dict(os.environ, embedding_environment(), clear=True):
+            result = self.call(
+                action="search", query="orders", mode="semantic"
+            )
+
+        self.assertFalse(result["ok"], result)
+        self.assertEqual(result["error"]["code"], "cloud_egress_not_accepted")
+
+    def test_process_environment_overrides_project_dotenv(self):
+        (self.repo / "app.py").write_text(
+            "def process_order():\n    return 1\n", encoding="utf-8"
+        )
+        (self.repo / ".env").write_text(
+            "MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=0\n"
+            "MINI_CLAUDE_EMBEDDING_BASE_URL=https://invalid.example/v1\n"
+            "MINI_CLAUDE_EMBEDDING_MODEL=dotenv-model\n",
+            encoding="utf-8",
+        )
+        self.commit_all()
+
+        with FakeEmbeddingServer(lambda _text: [1.0]) as server:
+            environment = embedding_environment(
+                MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS="1",
+                MINI_CLAUDE_EMBEDDING_BASE_URL=server.base_url,
+                MINI_CLAUDE_EMBEDDING_MODEL="process-model",
+            )
+            with patch.dict(os.environ, environment, clear=True):
+                result = self.call(
+                    action="search", query="orders", mode="semantic"
+                )
+
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["data"]["embedding"]["model"], "process-model")
+        self.assertTrue(server.requests)
+
     def test_semantic_search_embeds_structure_and_ranks_by_cosine_similarity(self):
         (self.repo / "billing.py").write_text(
             "def process_invoice():\n    return 'private source'\n",

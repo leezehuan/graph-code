@@ -14,7 +14,10 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Iterable, Iterator
+
+from ._dotenv import dotenv_values
 
 PROVIDER = "openai-compatible"
 MAX_BATCH_SIZE = 64
@@ -56,14 +59,19 @@ class EmbeddingCache:
         }
 
 
-def load_embedding_config() -> EmbeddingConfig:
-    if os.environ.get("MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS") != "1":
+def load_embedding_config(project_root: Path | None = None) -> EmbeddingConfig:
+    local_environment = dotenv_values(project_root)
+
+    def configured_value(name: str) -> str:
+        return os.environ.get(name, local_environment.get(name, ""))
+
+    if configured_value("MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS") != "1":
         raise EmbeddingError(
             "cloud_egress_not_accepted",
             "Set MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=1 to allow cloud embeddings",
         )
-    base_url = os.environ.get("MINI_CLAUDE_EMBEDDING_BASE_URL", "").strip()
-    model = os.environ.get("MINI_CLAUDE_EMBEDDING_MODEL", "").strip()
+    base_url = configured_value("MINI_CLAUDE_EMBEDDING_BASE_URL").strip()
+    model = configured_value("MINI_CLAUDE_EMBEDDING_MODEL").strip()
     missing = []
     if not base_url:
         missing.append("MINI_CLAUDE_EMBEDDING_BASE_URL")
@@ -77,7 +85,7 @@ def load_embedding_config() -> EmbeddingConfig:
     return EmbeddingConfig(
         base_url=base_url.rstrip("/"),
         model=model,
-        api_key=os.environ.get("MINI_CLAUDE_EMBEDDING_API_KEY", ""),
+        api_key=configured_value("MINI_CLAUDE_EMBEDDING_API_KEY"),
     )
 
 
