@@ -77,9 +77,10 @@ MINI_CLAUDE_EMBEDDING_MODEL=text-embedding-model
 MINI_CLAUDE_EMBEDDING_API_KEY=sk-... # 可选
 ```
 
-启动 `mini-claude-py` 时会读取当前 Git 项目根目录的 `.env`；非 Git 目录读取当前
-工作目录的 `.env`。已有的进程环境变量优先于文件中的值。默认 `mode=fts` 和其他
-三个动作仍不会联网。
+启动 `mini-claude-py` 时会固定读取 Mini Claude 源码仓库根目录的 `.env`，与启动时
+所在的工作目录或被分析仓库无关。已有的进程环境变量优先于文件中的值；特殊部署
+可用 `MINI_CLAUDE_ENV_FILE` 指定另一份配置文件。默认 `mode=fts` 和其他三个动作
+仍不会联网。
 
 向量按 endpoint 哈希和 model 隔离缓存到同一个 `code-graph.sqlite`。缓存不保存
 API key 或原始 endpoint；源码增删改时只补齐受影响节点。

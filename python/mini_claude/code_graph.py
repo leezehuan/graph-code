@@ -839,7 +839,6 @@ def _validate(inp: dict[str, Any]) -> tuple[str, int] | dict[str, Any]:
 
 def _search(
     conn: sqlite3.Connection,
-    root: Path,
     text: str,
     limit: int,
     kind: str | None = None,
@@ -868,7 +867,7 @@ def _search(
     from ._code_graph_embeddings import EmbeddingError, load_embedding_config
 
     try:
-        config = load_embedding_config(root)
+        config = load_embedding_config()
     except EmbeddingError as exc:
         if mode == "semantic" or exc.code == "cloud_egress_not_accepted":
             return _error("search", exc.code, str(exc))
@@ -1216,7 +1215,7 @@ def _execute_sync(inp: dict[str, Any]) -> str:
                     context_files["index"] = index
                     return json.dumps(context_files, ensure_ascii=False)
                 data = _search(
-                    conn, root, str(inp["query"]), limit,
+                    conn, str(inp["query"]), limit,
                     kind=inp.get("kind"),
                     context_files=context_files,
                     mode=inp.get("mode", "fts"),

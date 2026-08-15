@@ -14,7 +14,6 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Iterable, Iterator
 
 from ._dotenv import dotenv_values
@@ -59,8 +58,8 @@ class EmbeddingCache:
         }
 
 
-def load_embedding_config(project_root: Path | None = None) -> EmbeddingConfig:
-    local_environment = dotenv_values(project_root)
+def load_embedding_config() -> EmbeddingConfig:
+    local_environment = dotenv_values()
 
     def configured_value(name: str) -> str:
         return os.environ.get(name, local_environment.get(name, ""))

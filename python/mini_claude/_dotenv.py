@@ -1,4 +1,4 @@
-"""Small project-local .env reader with process environment precedence."""
+"""Source-repository .env reader with process environment precedence."""
 
 from __future__ import annotations
 
@@ -9,12 +9,11 @@ from pathlib import Path
 _KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
-def _project_root(start: Path | None = None) -> Path:
-    directory = (start or Path.cwd()).resolve()
-    for candidate_directory in (directory, *directory.parents):
-        if (candidate_directory / ".git").exists():
-            return candidate_directory
-    return directory
+def _env_path() -> Path:
+    override = os.environ.get("MINI_CLAUDE_ENV_FILE", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    return Path(__file__).resolve().parents[2] / ".env"
 
 
 def _parse_value(raw: str) -> str:
@@ -26,9 +25,9 @@ def _parse_value(raw: str) -> str:
     return value
 
 
-def dotenv_values(start: Path | None = None) -> dict[str, str]:
-    """Read only the current project's ``.env`` file."""
-    path = _project_root(start) / ".env"
+def dotenv_values() -> dict[str, str]:
+    """Read the Mini Claude source repository's ``.env`` file."""
+    path = _env_path()
     try:
         lines = path.read_text(encoding="utf-8-sig").splitlines()
     except (OSError, UnicodeError):
@@ -48,7 +47,7 @@ def dotenv_values(start: Path | None = None) -> dict[str, str]:
     return values
 
 
-def load_dotenv(start: Path | None = None) -> None:
-    """Load the current project's values without overriding process variables."""
-    for key, value in dotenv_values(start).items():
+def load_dotenv() -> None:
+    """Load source-repository values without overriding process variables."""
+    for key, value in dotenv_values().items():
         os.environ.setdefault(key, value)

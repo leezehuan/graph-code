@@ -19,17 +19,20 @@ from mini_claude import tools  # noqa: E402
 from mini_claude.autonomy import AUTO_MODE_FAST_PATH_TOOLS  # noqa: E402
 
 _EMBEDDING_ENVIRONMENT_VARIABLES = (
+    "MINI_CLAUDE_ENV_FILE",
     "MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS",
     "MINI_CLAUDE_EMBEDDING_BASE_URL",
     "MINI_CLAUDE_EMBEDDING_MODEL",
     "MINI_CLAUDE_EMBEDDING_API_KEY",
 )
+_MISSING_ENV_FILE = _PYTHON_DIR / "tests" / ".missing-env"
 
 
 def embedding_environment(**values):
     environment = dict(os.environ)
     for name in _EMBEDDING_ENVIRONMENT_VARIABLES:
         environment.pop(name, None)
+    environment["MINI_CLAUDE_ENV_FILE"] = str(_MISSING_ENV_FILE)
     environment.update(values)
     return environment
 
@@ -359,21 +362,25 @@ class CodeGraphBehaviorTests(unittest.TestCase):
             )
         self.assertEqual(server.requests, [])
 
-    def test_embedding_configuration_is_loaded_from_project_dotenv(self):
+    def test_embedding_configuration_uses_source_env_outside_target_repo(self):
         (self.repo / "app.py").write_text(
             "def process_order():\n    return 1\n", encoding="utf-8"
         )
         self.commit_all()
 
         with FakeEmbeddingServer(lambda _text: [1.0]) as server:
-            (self.repo / ".env").write_text(
+            source_env = self.repo.parent / "source.env"
+            source_env.write_text(
                 "MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=1\n"
                 f"MINI_CLAUDE_EMBEDDING_BASE_URL={server.base_url}\n"
                 "MINI_CLAUDE_EMBEDDING_MODEL=dotenv-model\n"
                 "MINI_CLAUDE_EMBEDDING_API_KEY=dotenv-key\n",
                 encoding="utf-8",
             )
-            with patch.dict(os.environ, embedding_environment(), clear=True):
+            environment = embedding_environment(
+                MINI_CLAUDE_ENV_FILE=str(source_env),
+            )
+            with patch.dict(os.environ, environment, clear=True):
                 result = self.call(
                     action="search", query="orders", mode="semantic"
                 )
@@ -381,6 +388,7 @@ class CodeGraphBehaviorTests(unittest.TestCase):
                     all(
                         name not in os.environ
                         for name in _EMBEDDING_ENVIRONMENT_VARIABLES
+                        if name != "MINI_CLAUDE_ENV_FILE"
                     )
                 )
 
@@ -389,11 +397,11 @@ class CodeGraphBehaviorTests(unittest.TestCase):
         self.assertTrue(server.requests)
         self.assertEqual(server.requests[0]["authorization"], "Bearer dotenv-key")
 
-    def test_embedding_configuration_does_not_escape_project_root(self):
+    def test_embedding_configuration_ignores_target_repository_dotenv(self):
         (self.repo / "app.py").write_text(
             "def process_order():\n    return 1\n", encoding="utf-8"
         )
-        (self.repo.parent / ".env").write_text(
+        (self.repo / ".env").write_text(
             "MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=1\n"
             "MINI_CLAUDE_EMBEDDING_BASE_URL=https://invalid.example/v1\n"
             "MINI_CLAUDE_EMBEDDING_MODEL=parent-model\n",
@@ -409,7 +417,7 @@ class CodeGraphBehaviorTests(unittest.TestCase):
         self.assertFalse(result["ok"], result)
         self.assertEqual(result["error"]["code"], "cloud_egress_not_accepted")
 
-    def test_process_environment_overrides_project_dotenv(self):
+    def test_process_environment_overrides_source_dotenv(self):
         (self.repo / "app.py").write_text(
             "def process_order():\n    return 1\n", encoding="utf-8"
         )
@@ -422,7 +430,15 @@ class CodeGraphBehaviorTests(unittest.TestCase):
         self.commit_all()
 
         with FakeEmbeddingServer(lambda _text: [1.0]) as server:
+            source_env = self.repo.parent / "source.env"
+            source_env.write_text(
+                "MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS=0\n"
+                "MINI_CLAUDE_EMBEDDING_BASE_URL=https://invalid.example/v1\n"
+                "MINI_CLAUDE_EMBEDDING_MODEL=dotenv-model\n",
+                encoding="utf-8",
+            )
             environment = embedding_environment(
+                MINI_CLAUDE_ENV_FILE=str(source_env),
                 MINI_CLAUDE_ACCEPT_CLOUD_EMBEDDINGS="1",
                 MINI_CLAUDE_EMBEDDING_BASE_URL=server.base_url,
                 MINI_CLAUDE_EMBEDDING_MODEL="process-model",
