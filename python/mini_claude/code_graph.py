@@ -2,8 +2,9 @@
 
 The design is a lightweight reimplementation of the core ideas from
 code-review-graph (MIT, Copyright (c) 2026 Tirth Kanani). It intentionally
-does not include that project's MCP server, daemon, embeddings, visualisation,
-community detection, or framework-specific analysis.
+does not include that project's MCP server, daemon, visualisation, community
+detection, or framework-specific analysis; embedding is an optional
+OpenAI-compatible adapter kept behind the search seam.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 MAX_FILE_BYTES = 2 * 1024 * 1024
 DEFAULT_MAX_RESULTS = 20
 MAX_RESULTS = 100
@@ -196,6 +197,8 @@ def _connect(root: Path) -> sqlite3.Connection:
 
 
 def _create_schema(conn: sqlite3.Connection) -> None:
+    from ._code_graph_search import drop_search_schema, ensure_search_schema
+
     conn.executescript(
         """
         CREATE TABLE IF NOT EXISTS metadata (
@@ -239,10 +242,14 @@ def _create_schema(conn: sqlite3.Connection) -> None:
         "SELECT value FROM metadata WHERE key='schema_version'"
     ).fetchone()
     if version is not None and int(version[0]) != SCHEMA_VERSION:
+        drop_search_schema(conn)
         conn.executescript(
             "DELETE FROM edges; DELETE FROM nodes; DELETE FROM files; "
-            "DELETE FROM metadata WHERE key='index_initialized';"
+            "DROP TRIGGER IF EXISTS node_embeddings_ad; "
+            "DROP TABLE IF EXISTS node_embeddings; "
+            "DELETE FROM metadata WHERE key IN ('index_initialized', 'impact_snapshot');"
         )
+    ensure_search_schema(conn)
     conn.execute(
         "INSERT OR REPLACE INTO metadata(key, value) VALUES('schema_version', ?)",
         (str(SCHEMA_VERSION),),
@@ -790,6 +797,29 @@ def _validate(inp: dict[str, Any]) -> tuple[str, int] | dict[str, Any]:
         return _error(action, "invalid_max_results", "max_results must be an integer from 1 to 100")
     if action == "search" and not str(inp.get("query", "")).strip():
         return _error(action, "missing_query", "query is required for search")
+    if action == "search" and inp.get("mode", "fts") not in {
+        "fts", "semantic", "hybrid",
+    }:
+        return _error(
+            action, "invalid_search_mode",
+            "mode must be fts, semantic, or hybrid",
+        )
+    if action == "search" and inp.get("kind") not in {
+        None, "file", "class", "function",
+    }:
+        return _error(
+            action, "invalid_kind", "kind must be file, class, or function"
+        )
+    context_files = inp.get("context_files")
+    if action == "search" and context_files is not None and (
+        not isinstance(context_files, list)
+        or not all(
+            isinstance(item, str) and bool(item.strip()) for item in context_files
+        )
+    ):
+        return _error(
+            action, "invalid_context_path", "context_files must be a list of paths"
+        )
     if action == "query" and (
         not str(inp.get("target", "")).strip()
         or inp.get("relation") not in {
@@ -807,18 +837,50 @@ def _validate(inp: dict[str, Any]) -> tuple[str, int] | dict[str, Any]:
     return action, value
 
 
-def _search(conn: sqlite3.Connection, text: str, limit: int) -> dict[str, Any]:
-    needle = text.strip().lower()
-    rows = conn.execute(
-        """SELECT * FROM nodes
-        WHERE lower(name) LIKE ? OR lower(qualified_name) LIKE ? OR lower(file_path) LIKE ?
-        ORDER BY
-          CASE WHEN lower(name)=? THEN 0 WHEN lower(name) LIKE ? THEN 1 ELSE 2 END,
-          qualified_name
-        LIMIT ?""",
-        (f"%{needle}%", f"%{needle}%", f"%{needle}%", needle, f"{needle}%", limit),
-    ).fetchall()
-    return {"results": [_node_dict(row) for row in rows], "result_count": len(rows)}
+def _search(
+    conn: sqlite3.Connection,
+    text: str,
+    limit: int,
+    kind: str | None = None,
+    context_files: Iterable[str] = (),
+    mode: str = "fts",
+) -> dict[str, Any]:
+    from ._code_graph_search import search_nodes
+
+    def fts_fallback(warning: EmbeddingError) -> dict[str, Any]:
+        fallback = search_nodes(
+            conn, text, limit, mode="fts", kind=kind,
+            context_files=context_files,
+        )
+        fallback["requested_mode"] = mode
+        fallback["warnings"] = [
+            {"code": warning.code, "message": str(warning), "fallback": "fts"}
+        ]
+        return fallback
+
+    if mode == "fts":
+        return search_nodes(
+            conn, text, limit, mode=mode, kind=kind,
+            context_files=context_files,
+        )
+
+    from ._code_graph_embeddings import EmbeddingError, load_embedding_config
+
+    try:
+        config = load_embedding_config()
+    except EmbeddingError as exc:
+        if mode == "semantic" or exc.code == "cloud_egress_not_accepted":
+            return _error("search", exc.code, str(exc))
+        return fts_fallback(exc)
+    try:
+        return search_nodes(
+            conn, text, limit, mode=mode, config=config, kind=kind,
+            context_files=context_files,
+        )
+    except EmbeddingError as exc:
+        if mode == "semantic":
+            return _error("search", exc.code, str(exc))
+        return fts_fallback(exc)
 
 
 def _resolve_target(
@@ -930,6 +992,8 @@ def _query(
 
 
 def _overview(conn: sqlite3.Connection, limit: int) -> dict[str, Any]:
+    from ._code_graph_search import search_index_stats
+
     language_rows = conn.execute(
         "SELECT language, COUNT(*) AS count FROM files GROUP BY language ORDER BY language"
     ).fetchall()
@@ -970,6 +1034,7 @@ def _overview(conn: sqlite3.Connection, limit: int) -> dict[str, Any]:
         "high_indegree": [
             {**_node_dict(row), "indegree": row["indegree"]} for row in hubs
         ],
+        "search_index": search_index_stats(conn),
     }
 
 
@@ -983,6 +1048,30 @@ def _normalize_changed_files(root: Path, values: Iterable[str]) -> list[str] | d
             relative = resolved.relative_to(root).as_posix()
         except (OSError, ValueError):
             return _error("impact", "invalid_path", f"Path is outside the project: {value}")
+        if relative not in normalized:
+            normalized.append(relative)
+    return sorted(normalized)
+
+
+def _normalize_context_files(
+    root: Path, values: Iterable[str],
+) -> list[str] | dict[str, Any]:
+    normalized: list[str] = []
+    for value in values:
+        raw = Path(value)
+        if raw.is_absolute():
+            return _error(
+                "search", "invalid_context_path",
+                f"Path must be relative to the project: {value}",
+            )
+        candidate = root / raw
+        try:
+            relative = candidate.resolve(strict=False).relative_to(root).as_posix()
+        except (OSError, ValueError):
+            return _error(
+                "search", "invalid_context_path",
+                f"Path is outside the project: {value}",
+            )
         if relative not in normalized:
             normalized.append(relative)
     return sorted(normalized)
@@ -1119,7 +1208,21 @@ def _execute_sync(inp: dict[str, Any]) -> str:
             index = _refresh(conn, root)
             previous_snapshot = index.pop("_previous_snapshot")
             if action == "search":
-                data = _search(conn, str(inp["query"]), limit)
+                context_files = _normalize_context_files(
+                    root, inp.get("context_files") or [],
+                )
+                if isinstance(context_files, dict):
+                    context_files["index"] = index
+                    return json.dumps(context_files, ensure_ascii=False)
+                data = _search(
+                    conn, str(inp["query"]), limit,
+                    kind=inp.get("kind"),
+                    context_files=context_files,
+                    mode=inp.get("mode", "fts"),
+                )
+                if data.get("ok") is False:
+                    data["index"] = index
+                    return json.dumps(data, ensure_ascii=False)
                 summary = f"Found {data['result_count']} matching code node(s)."
             elif action == "query":
                 data = _query(conn, str(inp["relation"]), str(inp["target"]), limit)

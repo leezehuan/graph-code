@@ -221,6 +221,19 @@ tool_definitions: list[ToolDef] = [
                     "enum": ["search", "query", "impact", "overview"],
                 },
                 "query": {"type": "string", "description": "Search text for search."},
+                "mode": {
+                    "type": "string",
+                    "enum": ["fts", "semantic", "hybrid"],
+                    "default": "fts",
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": ["file", "class", "function"],
+                },
+                "context_files": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
                 "target": {"type": "string", "description": "Symbol or relative path."},
                 "relation": {
                     "type": "string",

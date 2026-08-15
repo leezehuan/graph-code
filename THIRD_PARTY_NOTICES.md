@@ -2,8 +2,9 @@
 
 ## code-review-graph
 
-The lightweight internal code graph in `python/mini_claude/code_graph.py`
-reimplements and adapts core ideas from
+The lightweight internal code graph in `python/mini_claude/code_graph.py`,
+`python/mini_claude/_code_graph_search.py`, and
+`python/mini_claude/_code_graph_embeddings.py` reimplements and adapts core ideas from
 [`code-review-graph`](https://github.com/tirth8205/code-review-graph).
 
 Copyright (c) 2026 Tirth Kanani
