@@ -69,6 +69,21 @@ def aggregate_ranked_cases(
     }
 
 
+def aggregate_scored_rows(
+    rows: Sequence[dict[str, Any]], keys: Sequence[str],
+) -> dict[str, float | int]:
+    valid = [row for row in rows if not row.get("error")]
+    denominator = len(rows) or 1
+    return {
+        "samples": len(rows),
+        "successful": len(valid),
+        "errors": len(rows) - len(valid),
+    } | {
+        key: sum(float(row.get(key, 0.0)) for row in valid) / denominator
+        for key in keys
+    }
+
+
 def paired_bootstrap_delta(
     baseline: Sequence[tuple[set[str], Sequence[str] | None]],
     candidate: Sequence[tuple[set[str], Sequence[str] | None]],
@@ -430,11 +445,62 @@ def _strategy_search(
     if strategy == "grep_file":
         files, elapsed = _grep_files(root, query, max_results)
         return files, [], elapsed, None
+    if strategy == "routed":
+        route = classify_route(query)
+        if route not in {"fts", "hybrid"}:
+            return [], [], 0.0, f"unsupported_route_{route}"
+        strategy = route
+    if strategy == "hybrid_graph":
+        return _hybrid_graph_search(root, query, max_results, live=live)
     mode = strategy
     nodes, _data, elapsed, error = _graph_search(
         root, query, mode, max_results, live=live
     )
     return [node.get("qualified_name", "") for node in nodes], nodes, elapsed, error
+
+
+def _hybrid_graph_search(
+    root: Path, query: str, max_results: int, *, live: bool,
+) -> tuple[list[str], list[dict[str, Any]], float, str | None]:
+    anchors, _data, elapsed, error = _graph_search(
+        root, query, "hybrid", max_results * 3, live=live
+    )
+    if error:
+        return [], [], elapsed, error
+    candidates: dict[str, dict[str, Any]] = {}
+    scores: dict[str, float] = {}
+    for rank, node in enumerate(anchors, start=1):
+        name = str(node.get("qualified_name") or "")
+        if not name:
+            continue
+        candidates[name] = node
+        scores[name] = 1.0 / rank
+    relations = (
+        "callers_of", "callees_of", "importers_of", "tests_for",
+        "children_of", "inheritors_of", "references_to",
+    )
+    for anchor_rank, anchor in enumerate(anchors[:3], start=1):
+        target = str(anchor.get("qualified_name") or "")
+        if not target:
+            continue
+        for relation in relations:
+            neighbors, relation_ms, relation_error = _query_graph(
+                root, relation, target, max_results
+            )
+            elapsed += relation_ms
+            if relation_error:
+                continue
+            for neighbor_rank, node in enumerate(neighbors, start=1):
+                name = str(node.get("qualified_name") or "")
+                if not name:
+                    continue
+                candidates.setdefault(name, node)
+                scores[name] = scores.get(name, 0.0) + (
+                    0.35 / (anchor_rank * neighbor_rank)
+                )
+    ranked_names = sorted(scores, key=lambda name: (-scores[name], name))[:max_results]
+    ranked_nodes = [candidates[name] for name in ranked_names]
+    return ranked_names, ranked_nodes, elapsed, None
 
 
 def _validate_gold(root: Path, cases: Iterable[dict[str, Any]]) -> list[str]:
@@ -605,11 +671,10 @@ def evaluate_generation(
                 })
     summary: dict[str, Any] = {}
     for strategy in latencies:
-        valid = [row for row in rows if row["strategy"] == strategy and not row.get("error")]
-        summary[strategy] = {
-            "samples": len(valid), "errors": len(qa_cases) - len(valid),
-            "faithfulness": sum(row["faithfulness"] for row in valid) / len(valid) if valid else 0.0,
-            "answer_relevancy": sum(row["answer_relevancy"] for row in valid) / len(valid) if valid else 0.0,
+        strategy_rows = [row for row in rows if row["strategy"] == strategy]
+        summary[strategy] = aggregate_scored_rows(
+            strategy_rows, ("faithfulness", "answer_relevancy")
+        ) | {
             "latency_p50_ms": percentile(latencies[strategy], 0.5),
             "latency_p95_ms": percentile(latencies[strategy], 0.95),
         }
@@ -698,7 +763,9 @@ def evaluate_repository(
                 "error": embedding_error,
                 "embedding": (embedding_data or {}).get("embedding"),
             }
-        strategies = ("grep_file", "fts", "semantic", "hybrid")
+        strategies = (
+            "grep_file", "fts", "semantic", "hybrid", "hybrid_graph", "routed",
+        )
         node_rows: dict[str, list[tuple[set[str], Sequence[str] | None]]] = {
             strategy: [] for strategy in strategies if strategy != "grep_file"
         }
@@ -785,6 +852,9 @@ def evaluate_repository(
                 "fts_to_hybrid": paired_bootstrap_delta(
                     node_rows["fts"], node_rows["hybrid"]
                 ),
+                "hybrid_to_hybrid_graph": paired_bootstrap_delta(
+                    node_rows["hybrid"], node_rows["hybrid_graph"]
+                ),
                 "graph_exact_to_hybrid_graph": paired_bootstrap_delta(
                     relation_output.get("graph_exact", []),
                     relation_output.get("hybrid_graph", []),
@@ -799,7 +869,7 @@ def evaluate_repository(
                 }
                 for strategy, values in latency.items()
             } | {
-                strategy: {
+                f"{strategy}_relation": {
                     "samples": len(values),
                     "p50": percentile(values, 0.50),
                     "p95": percentile(values, 0.95),
@@ -843,11 +913,9 @@ def evaluate_out_of_repo(
         except Exception as exc:
             rows.append({"case_id": case["id"], "error": provider_error_code(exc)})
     valid = [row for row in rows if not row.get("error")]
-    return {
-        "samples": len(valid), "errors": len(rows) - len(valid),
-        "llm_correctness": sum(row["llm_correctness"] for row in valid) / len(valid) if valid else 0.0,
-        "embedding_cosine": sum(row["embedding_cosine"] for row in valid) / len(valid) if valid else 0.0,
-        "combined": sum(row["combined"] for row in valid) / len(valid) if valid else 0.0,
+    return aggregate_scored_rows(
+        rows, ("llm_correctness", "embedding_cosine", "combined")
+    ) | {
         "latency_p50_ms": percentile([row["latency_ms"] for row in valid], 0.5),
         "latency_p95_ms": percentile([row["latency_ms"] for row in valid], 0.95),
         "rows": rows,
@@ -856,6 +924,23 @@ def evaluate_out_of_repo(
 
 def _load_cases(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _refresh_quality_aggregates(report: dict[str, Any]) -> None:
+    for repository in report.get("repositories", []):
+        generation = repository.get("generation", {})
+        rows = generation.get("rows", [])
+        for strategy, metrics in generation.get("summary", {}).items():
+            strategy_rows = [row for row in rows if row.get("strategy") == strategy]
+            quality = aggregate_scored_rows(
+                strategy_rows, ("faithfulness", "answer_relevancy")
+            )
+            metrics.update(quality)
+    out = report.get("out_of_repo", {})
+    if out.get("rows"):
+        out.update(aggregate_scored_rows(
+            out["rows"], ("llm_correctness", "embedding_cosine", "combined")
+        ))
 
 
 def _render_report(report: dict[str, Any]) -> str:
@@ -949,11 +1034,11 @@ def _render_report(report: dict[str, Any]) -> str:
                 f"{metrics['delta_vs_oracle']:.3f} | {metrics['samples']} |"
             )
         lines += ["", "This controlled estimate applies the same repository-average Hit@5 scorecard to every router; incompatible route families receive zero credit."]
-    lines += ["", "## Generation", "", "| Repository / strategy | Samples | Faithfulness | Answer Relevancy | Errors | P50 (ms) | P95 (ms) |", "|---|---:|---:|---:|---:|---:|---:|"]
+    lines += ["", "## Generation", "", "| Repository / strategy | Samples | Successful | Faithfulness | Answer Relevancy | Errors | P50 (ms) | P95 (ms) |", "|---|---:|---:|---:|---:|---:|---:|---:|"]
     for item in report["repositories"]:
         generation = item.get("generation", {})
         for strategy, metrics in generation.get("summary", {}).items():
-            lines.append(f"| {item['name']} / `{strategy}` | {metrics['samples']} | {metrics['faithfulness']:.3f} | {metrics['answer_relevancy']:.3f} | {metrics['errors']} | {metrics['latency_p50_ms'] if metrics['latency_p50_ms'] is not None else 'n/a'} | {metrics['latency_p95_ms'] if metrics['latency_p95_ms'] is not None else 'n/a'} |")
+            lines.append(f"| {item['name']} / `{strategy}` | {metrics['samples']} | {metrics.get('successful', metrics['samples'] - metrics['errors'])} | {metrics['faithfulness']:.3f} | {metrics['answer_relevancy']:.3f} | {metrics['errors']} | {metrics['latency_p50_ms'] if metrics['latency_p50_ms'] is not None else 'n/a'} | {metrics['latency_p95_ms'] if metrics['latency_p95_ms'] is not None else 'n/a'} |")
     lines += ["", "### Generation Phase Latency (ms)", "", "| Repository / phase | Samples | P50 | P95 |", "|---|---:|---:|---:|"]
     for item in report["repositories"]:
         generation = item.get("generation", {})
@@ -965,8 +1050,8 @@ def _render_report(report: dict[str, Any]) -> str:
             )
     out = report.get("out_of_repo", {})
     if out.get("status") != "offline_mode":
-        lines += ["", "## Out-of-repository QA", "", f"Samples: {out.get('samples', 0)}, errors: {out.get('errors', 0)}, LLM correctness: {out.get('llm_correctness', 0):.3f}, embedding cosine: {out.get('embedding_cosine', 0):.3f}, combined: {out.get('combined', 0):.3f}."]
-    lines += ["", "## Notes", "", "- `grep_file` is a file-level baseline and is intentionally absent from the node table.", "- `semantic` and `hybrid` require `--live`; offline runs record `offline_mode` errors rather than silently omitting samples.", "- No source body, endpoint, or API key is included in this report.", ""]
+        lines += ["", "## Out-of-repository QA", "", f"Samples: {out.get('samples', 0)}, successful: {out.get('successful', out.get('samples', 0) - out.get('errors', 0))}, errors: {out.get('errors', 0)}, LLM correctness: {out.get('llm_correctness', 0):.3f}, embedding cosine: {out.get('embedding_cosine', 0):.3f}, combined: {out.get('combined', 0):.3f}."]
+    lines += ["", "## Notes", "", "- `grep_file` is a file-level baseline and is intentionally absent from the node table.", "- `semantic`, `hybrid`, and `hybrid_graph` require `--live`; offline runs record `offline_mode` errors rather than silently omitting samples.", "- Failed generation and out-of-repository rows contribute zero to aggregate quality scores.", "- No source body, endpoint, or API key is included in this report.", ""]
     return "\n".join(lines)
 
 
@@ -1010,6 +1095,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         report["out_of_repo"] = evaluate_out_of_repo(cases.get("out_of_repo", []), cloud)
         report["generated_at"] = datetime.now(timezone.utc).isoformat()
         report["models"] = {"chat": cloud.model, "embedding": cloud.embedding_model}
+        _refresh_quality_aggregates(report)
         report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         (args.output / "latest.md").write_text(_render_report(report), encoding="utf-8")
         print(_render_report(report))
@@ -1036,6 +1122,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         report["generated_at"] = datetime.now(timezone.utc).isoformat()
         report["models"] = {"chat": cloud.model, "embedding": cloud.embedding_model}
+        _refresh_quality_aggregates(report)
         args.output.mkdir(parents=True, exist_ok=True)
         report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         (args.output / "latest.md").write_text(_render_report(report), encoding="utf-8")
@@ -1051,7 +1138,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             cases["repositories"].get(name, {}).get("qa", []),
             live=args.live, cloud=cloud, max_results=args.max_results,
         ))
-    routing = evaluate_routing(cases.get("routing", []), cloud)
+    previous: dict[str, Any] = {}
+    previous_path = args.output / "latest.json"
+    if args.retrieval_only and previous_path.is_file():
+        previous = json.loads(previous_path.read_text(encoding="utf-8"))
+        previous_by_name = {item["name"]: item for item in previous.get("repositories", [])}
+        for repository in repositories:
+            old = previous_by_name.get(repository["name"], {})
+            if old.get("generation"):
+                repository["generation"] = old["generation"]
+    routing = (
+        previous.get("routing")
+        if previous.get("routing") else evaluate_routing(cases.get("routing", []), cloud)
+    )
     report = {
         "schema_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -1064,8 +1163,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "repositories": repositories,
         "routing": routing,
         "routing_downstream": routing_downstream_metrics(routing, repositories),
-        "out_of_repo": evaluate_out_of_repo(cases.get("out_of_repo", []), cloud),
+        "out_of_repo": previous.get("out_of_repo") or evaluate_out_of_repo(
+            cases.get("out_of_repo", []), cloud
+        ),
     }
+    _refresh_quality_aggregates(report)
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "latest.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"

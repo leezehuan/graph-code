@@ -2,6 +2,7 @@
 
 from .benchmark import (
     aggregate_ranked_cases,
+    aggregate_scored_rows,
     build_context,
     classify_route,
     create_source_snapshot,
@@ -14,6 +15,7 @@ from .benchmark import (
 
 __all__ = [
     "aggregate_ranked_cases",
+    "aggregate_scored_rows",
     "build_context",
     "classify_route",
     "create_source_snapshot",

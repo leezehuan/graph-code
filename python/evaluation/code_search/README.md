@@ -10,7 +10,9 @@ cases without changing the production `code_graph` interface.
 - `semantic`: embedding cosine search.
 - `hybrid`: FTS5 and semantic candidates merged by the production RRF ranker.
 - `graph_exact`: direct relation traversal from a known symbol.
-- `hybrid_graph`: hybrid anchor search followed by relation traversal.
+- `hybrid_graph`: hybrid candidates reranked with relations from the top three
+  anchors; relation cases use hybrid anchor search followed by traversal.
+- `routed`: the rule router selects FTS or hybrid for each node-search case.
 
 The report keeps file and node metrics separate. Empty results and provider
 errors remain in metric denominators. Out-of-repository questions have no gold
@@ -71,6 +73,8 @@ do not store source contexts, answers, endpoints, or API keys.
 Retrieval reports Hit@5, Recall@5, and MRR@10. Main-chain deltas use 10,000
 paired bootstrap samples with seed `20260815`. Relation tasks additionally
 report anchor hit rate, neighbor Recall@5, and end-to-end chain success.
+The cumulative main chain compares FTS, hybrid, and hybrid plus graph expansion
+on the same 20 node cases per repository.
 
 Routing reports overall accuracy, per-class recall, confusion matrices, and a
 controlled downstream estimate. The estimate applies one repository-average
@@ -83,4 +87,5 @@ cosine similarity, and their mean. Latency uses inclusive linear interpolation
 for P50 and P95. Index build and first embedding backfill are separated from
 warm search; generation also splits retrieval, answer generation, evaluation,
 and end-to-end latency. Provider failures are saved as stable error codes, not
-raw response text.
+raw response text, and failed generation rows contribute zero to aggregate
+quality scores.

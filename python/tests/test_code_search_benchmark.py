@@ -9,6 +9,7 @@ _PYTHON_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PYTHON_DIR))
 
 from evaluation.code_search import (  # noqa: E402
+    aggregate_scored_rows,
     aggregate_ranked_cases,
     build_context,
     classify_route,
@@ -158,6 +159,20 @@ class CodeSearchBenchmarkTests(unittest.TestCase):
             "provider_connection_error",
         )
         self.assertEqual(provider_error_code(RuntimeError("embedding_error")), "embedding_error")
+
+    def test_scored_rows_count_failures_as_zero(self):
+        rows = [
+            {"score": 0.8, "error": None},
+            {"score": 0.4, "error": None},
+            {"error": "provider_timeout"},
+        ]
+
+        result = aggregate_scored_rows(rows, ("score",))
+
+        self.assertEqual(result["samples"], 3)
+        self.assertEqual(result["successful"], 2)
+        self.assertEqual(result["errors"], 1)
+        self.assertAlmostEqual(result["score"], 0.4)
 
     def test_context_deduplicates_nodes_and_honors_character_budget(self):
         source = "def alpha():\n    return '" + ("x" * 100) + "'\n"
