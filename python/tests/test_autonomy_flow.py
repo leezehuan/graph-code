@@ -1,4 +1,4 @@
-"""Control-flow tests for the two-stage Auto Mode classifier (Python mirror of
+"""Control-flow tests for the two-stage Auto Mode classifier (Python implementation of
 test/autonomy-flow.test.ts). Stubs the per-stage classifier query (no network)
 and drives Agent._classify_tool_call directly, covering: stage-1 gate,
 stage-1→stage-2 escalation, denial counting, and fail-closed parsing.

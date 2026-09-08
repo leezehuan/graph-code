@@ -2082,4 +2082,3 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
             return answer.lower().startswith("y")
         except EOFError:
             return False
-

@@ -1,13 +1,7 @@
-"""Autonomy & continuation: the prompts and minimal logic behind /goal, /loop,
-and Auto Mode. Mirror of src/autonomy.ts.
+"""Autonomy and continuation logic for /goal, /loop, and Auto Mode.
 
-Claude Code's "let Claude keep working on its own" is a family of features over
-a shared base; this module ports the *client-side* pieces that are extractable
-verbatim from the leaked binary, and reproduces the mechanism (not the
-server-side model/thresholds).
-
-Sources: _reference/{goal,loop,auto-mode}-reverse-engineering.md and the
-classifier-prompt appendix of how-claude-code-works/docs/18-auto-mode.md.
+This module contains the local state transitions, prompts, permission checks,
+and scheduling contracts used by the CLI.
 """
 import json
 import math
@@ -34,10 +28,10 @@ def goal_directive(condition: str) -> str:
 
 
 # Evaluator system prompt sent to the configured small/fast model each turn.
-# Assembled from the evaluator strings extracted in goal-reverse-engineering.md
-# §1/§7 — the key sentences (judge question, three-state contract, the
-# "impossible is evidence not proof" guard) are quoted; the full real prompt is
-# longer. Real Claude Code also pins the {ok,reason,impossible} shape with an
+# The evaluator prompt defines the
+# three-state contract and the safety guard
+# "impossible is evidence not proof" guard) that distinguishes an impossible goal from an unfinished goal. The prompt is
+# provider-independent. The client also pins the {ok,reason,impossible} shape with an
 # API-level json_schema output_config at effort:"high"; here the reply is free
 # text that we parse (parse_goal_verdict), so the same evaluator works on both
 # the Anthropic and OpenAI-compatible backends.
@@ -108,7 +102,7 @@ def parse_goal_verdict(raw: str) -> dict:
 # Safety backstop for /goal when no --max-turns is set: cap the number of
 # not-met retries so a never-satisfiable condition the evaluator fails to flag as
 # impossible still terminates. Real Claude Code relies on the evaluator plus user
-# interrupt; we add a fixed cap because this is a teaching CLI.
+# interrupt; we add a fixed cap because this is a local CLI.
 GOAL_MAX_ITERATIONS = 25
 
 
@@ -119,8 +113,7 @@ GOAL_MAX_ITERATIONS = 25
 # going, /loop decides *when* to start the next run — either on a fixed interval
 # or, with no interval, at a pace the main model picks for itself. The
 # "intelligence" lives in the command prompt and the main model, not a hardcoded
-# scheduler. See loop-reverse-engineering.md §2.
-
+# scheduler.
 _DURATION_RE = re.compile(r"^(\d+)([smhd])$")
 _UNIT_SECONDS = {"s": 1, "m": 60, "h": 3600, "d": 86400}
 _EVERY_RE = re.compile(
@@ -143,7 +136,7 @@ def parse_duration_to_seconds(token: str) -> int | None:
 
 def parse_loop_input(raw: str) -> dict:
     """Parse `/loop [interval] <prompt>` input. Precedence (verbatim from
-    loop-reverse-engineering.md §2):
+    the command contract):
       1. first token matches ^\\d+[smhd]$ → interval, rest is prompt;
       2. else trailing `every <N><unit>` (a time expression) → interval;
       3. else the whole thing is the prompt → dynamic self-paced mode.
@@ -197,8 +190,8 @@ OFFER_CLOUD_THRESHOLD_SECONDS = 3600
 
 # ScheduleWakeup tool — the dynamic-mode engine. The three-field shape
 # ({delaySeconds, reason, prompt}) and the [60,3600] clamp mirror the observed
-# wire schema (loop-reverse-engineering.md §3); the description text here is a
-# condensed teaching paraphrase, not the full verbatim tool description. The main
+# wire schema (the local scheduling contract); the description text here is a
+# defined locally for this CLI. The main
 # model calls this to self-pace: no wakeup scheduled means the loop converged.
 SCHEDULE_WAKEUP_TOOL = {
     "name": "schedule_wakeup",
@@ -237,7 +230,7 @@ def clamp_wakeup_delay(seconds) -> int:
 def dynamic_loop_directive(prompt: str) -> str:
     """Instruction injected as the dynamic-loop turn's directive: tells the main
     model to self-pace via schedule_wakeup, or stop by not calling it. This
-    wording is ours (a teaching composition), not the verbatim /loop command
+    wording is defined locally for the /loop command
     prompt — it captures the same self-pacing contract."""
     return (
         "# Autonomous loop tick (dynamic pacing)\n\n"
@@ -249,7 +242,7 @@ def dynamic_loop_directive(prompt: str) -> str:
     )
 
 
-# Teaching-safety cap on interval iterations so a demo loop can't run forever
+# Safety cap on interval iterations so a loop cannot run forever
 # without a --max-turns/--max-cost budget. Real Claude Code bounds recurring
 # loops with a 7-day expiry instead.
 LOOP_MAX_ITERATIONS = 100
@@ -265,7 +258,7 @@ LOOP_MAX_ITERATIONS = 100
 # what would otherwise stop to ask a human.
 #
 # The prompt skeleton, output format, stage suffixes, and CLAUDE.md-injection
-# wording are quoted verbatim from how-claude-code-works ch18's appendix; the
+# wording are quoted verbatim from the configured classifier rules; the
 # rule buckets are a representative subset of `claude auto-mode defaults`. Both
 # live in assets/auto-mode-rules.json so the (long) English exists once, not
 # duplicated across the TS and Python mirrors. We DO run the two-stage flow
@@ -324,7 +317,7 @@ def build_classifier_system(rules: dict) -> str:
 
 
 # Tools that skip the classifier entirely — read-only or side-effect-free, so
-# there's nothing to judge. A trimmed mirror of Claude Code's
+# read-only and side-effect-free tools skip classification.
 # SAFE_YOLO_ALLOWLISTED_TOOLS. NOTE: write_file/edit_file are deliberately
 # excluded (real CC excludes Write/Edit too), and so is web_fetch — a URL fetch
 # can carry data out, so the classifier should see it.
@@ -336,7 +329,7 @@ AUTO_MODE_FAST_PATH_TOOLS = {
 
 # Denial limits: after this many blocks the classifier is probably stuck in a
 # refusal loop, so fall back to asking a human (or abort in headless mode).
-# Verbatim constants from auto-mode-reverse-engineering.md §8.
+# Limits that prevent a classifier refusal loop from running indefinitely.
 DENIAL_LIMITS = {"max_consecutive": 3, "max_total": 20}
 
 

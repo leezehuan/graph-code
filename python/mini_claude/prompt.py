@@ -203,7 +203,7 @@ def get_git_context() -> str:
 # template above is the static core; env/git/memory/skills are the dynamic
 # tail; CLAUDE.md + date are pushed into a <system-reminder> message (see
 # build_user_context_reminder) that the agent injects into the FIRST user
-# message — Claude Code's prependUserContext. See how-claude-code-works ch3.6
+# message — the first-user context reminder
 # "前缀缓存策略".
 
 

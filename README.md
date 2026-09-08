@@ -73,9 +73,6 @@ python/mini_claude/   Agent、CLI、工具、技能、记忆、MCP 和代码图�
 python/tests/         Python 单元测试
 python/evaluation/    代码搜索评测与结果
 assets/               运行时资源（包括 Auto Mode 规则）
-hermes-agent/         独立维护的 Hermes 项目（可选）
-learn-hermes-agent/   独立维护的 Hermes 相关项目（可选）
-code-review-graph/    独立维护的代码审查图项目（可选）
 ```
 
 ## 开发与验证
