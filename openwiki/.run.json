@@ -1,0 +1,306 @@
+{
+  "schemaVersion": 1,
+  "runId": "c1b70001-3bc6-442e-a4ac-dfd66264dbf0",
+  "mode": "init",
+  "phase": "generating",
+  "startedAt": "2026-08-26T08:40:11.825Z",
+  "language": "en",
+  "languageChanged": false,
+  "requiredRewritePages": [],
+  "initialPages": [],
+  "sourceFingerprint": "sha256:bc53d92e79ace69617b9cf58b12e60fbc6cb347a8c39c404600506362917e147",
+  "actor": {
+    "producerActor": "openwiki/0.4.0",
+    "metadataModel": "gpt-5.6-terra"
+  },
+  "previousLastUpdate": null,
+  "wikiGoal": "A code wiki for this repository.",
+  "beforeContentSnapshot": "632cf2073a36a4ef01dcd33b2a7a2d55b75afc69f961e55e70fa14a5e236f881",
+  "preparedWiki": {
+    "generatedProvenance": []
+  },
+  "plan": {
+    "pages": [
+      {
+        "id": "e18888bf-7431-4ed6-99e0-4f5ecf513ef5",
+        "path": "/openwiki/architecture/agent-runtime.md",
+        "title": "Agent Runtime Architecture",
+        "purpose": "Describe the CLI-to-Agent architecture, backend split, message representations, lifecycle ownership, and the boundaries among prompts, tools, memory, MCP, skills, autonomy, and terminal UI.",
+        "seedPaths": [
+          "python/mini_claude/__main__.py",
+          "python/mini_claude/agent.py",
+          "python/mini_claude/prompt.py",
+          "python/mini_claude/ui.py"
+        ],
+        "relatedPages": [
+          "/openwiki/concepts/context-and-state.md",
+          "/openwiki/integrations/mcp.md",
+          "/openwiki/integrations/model-backends.md",
+          "/openwiki/quickstart.md",
+          "/openwiki/workflows/agent-turn.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for the runtime/component flow."
+        ],
+        "status": "complete"
+      },
+      {
+        "id": "fc51c741-341f-41df-9bbb-87ae5de98ac0",
+        "path": "/openwiki/concepts/code-graph.md",
+        "title": "On-Demand Code Graph",
+        "purpose": "Explain the deferred code_graph tool, source discovery and Tree-sitter parsing, SQLite schema/cache lifecycle, relationship and impact queries, local FTS fallback, optional semantic/hybrid search, and metadata-only cloud-embedding consent boundary.",
+        "seedPaths": [
+          ".env.example",
+          "python/mini_claude/_code_graph_embeddings.py",
+          "python/mini_claude/_code_graph_search.py",
+          "python/mini_claude/code_graph.py",
+          "python/mini_claude/tools.py",
+          "python/tests/test_code_graph_tool.py"
+        ],
+        "relatedPages": [
+          "/openwiki/concepts/tool-safety.md",
+          "/openwiki/integrations/model-backends.md",
+          "/openwiki/operations/configuration.md",
+          "/openwiki/testing/verification.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for graph indexing, cache refresh, and search-mode flows."
+        ],
+        "status": "pending"
+      },
+      {
+        "id": "53de66c5-feee-40b9-909a-d6e6becbf8f6",
+        "path": "/openwiki/concepts/context-and-state.md",
+        "title": "Conversation Context and Persistent State",
+        "purpose": "Explain system-prompt composition, project instructions and rules discovery, memory recall/prefetch, four-tier context reduction, large-result storage, token/cost limits, session persistence, and the distinct on-disk locations and invariants.",
+        "seedPaths": [
+          "python/mini_claude/_dotenv.py",
+          "python/mini_claude/agent.py",
+          "python/mini_claude/memory.py",
+          "python/mini_claude/prompt.py",
+          "python/mini_claude/session.py"
+        ],
+        "relatedPages": [
+          "/openwiki/concepts/skills-and-subagents.md",
+          "/openwiki/integrations/model-backends.md",
+          "/openwiki/operations/configuration.md",
+          "/openwiki/workflows/agent-turn.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for context lifecycle and persistence flows."
+        ],
+        "status": "pending"
+      },
+      {
+        "id": "1cb199d9-bd6f-4af1-ad79-529297c60fbb",
+        "path": "/openwiki/concepts/skills-and-subagents.md",
+        "title": "Skills and Subagents",
+        "purpose": "Describe discovery precedence, frontmatter and supporting-file constraints, safe skill mutation and ownership, inline versus fork execution, background skill review, built-in/custom subagent configuration, tool scoping, and inherited runtime/permission behavior.",
+        "seedPaths": [
+          "python/mini_claude/agent.py",
+          "python/mini_claude/skill_review.py",
+          "python/mini_claude/skills.py",
+          "python/mini_claude/subagent.py",
+          "python/tests/test_skill_agent.py",
+          "python/tests/test_skill_review.py",
+          "python/tests/test_skills.py"
+        ],
+        "relatedPages": [
+          "/openwiki/architecture/agent-runtime.md",
+          "/openwiki/concepts/context-and-state.md",
+          "/openwiki/concepts/tool-safety.md",
+          "/openwiki/workflows/planning-and-autonomy.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for forked-agent and skill-review lifecycles."
+        ],
+        "status": "pending"
+      },
+      {
+        "id": "818c1837-dc12-42d2-8808-fc23667ff692",
+        "path": "/openwiki/concepts/tool-safety.md",
+        "title": "Tool Contracts and Safety Controls",
+        "purpose": "Document built-in and deferred tool activation, read-before-edit and mtime invariants, bounded outputs, permission-rule precedence, permission modes, dangerous shell confirmation, plan-mode restrictions, and Auto Mode classification boundaries.",
+        "seedPaths": [
+          "python/mini_claude/agent.py",
+          "python/mini_claude/autonomy.py",
+          "python/mini_claude/tools.py",
+          "python/tests/test_autonomy_flow.py"
+        ],
+        "relatedPages": [
+          "/openwiki/concepts/code-graph.md",
+          "/openwiki/concepts/skills-and-subagents.md",
+          "/openwiki/testing/verification.md",
+          "/openwiki/workflows/agent-turn.md",
+          "/openwiki/workflows/planning-and-autonomy.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for non-trivial permission and tool-control flow."
+        ],
+        "status": "pending"
+      },
+      {
+        "id": "c4e53e72-53af-4086-a088-fbb9fd23d67d",
+        "path": "/openwiki/integrations/mcp.md",
+        "title": "MCP Tool Integration",
+        "purpose": "Document MCP config-source merge order, stdio JSON-RPC connection and handshake, prefixed tool discovery/routing, lazy initialization, timeouts, partial connection failures, and shutdown cleanup.",
+        "seedPaths": [
+          ".mcp.json",
+          "python/mini_claude/agent.py",
+          "python/mini_claude/mcp_client.py"
+        ],
+        "relatedPages": [
+          "/openwiki/architecture/agent-runtime.md",
+          "/openwiki/concepts/tool-safety.md",
+          "/openwiki/operations/configuration.md",
+          "/openwiki/workflows/agent-turn.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for the JSON-RPC connection and tool-routing sequence."
+        ],
+        "status": "pending"
+      },
+      {
+        "id": "de74a8ee-8870-4fdc-8cb2-b5812fec94ec",
+        "path": "/openwiki/integrations/model-backends.md",
+        "title": "Model Provider Integration",
+        "purpose": "Specify Anthropic and OpenAI-compatible client selection, streaming/message-format adaptation, thinking support, retry policy, cache accounting, side queries, token/cost accounting, API configuration, and provider failure behavior.",
+        "seedPaths": [
+          ".env.example",
+          "python/mini_claude/__main__.py",
+          "python/mini_claude/agent.py",
+          "python/pyproject.toml"
+        ],
+        "relatedPages": [
+          "/openwiki/concepts/context-and-state.md",
+          "/openwiki/operations/configuration.md",
+          "/openwiki/testing/verification.md",
+          "/openwiki/workflows/agent-turn.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for dual-backend request flow."
+        ],
+        "status": "pending"
+      },
+      {
+        "id": "00f4d89e-50f3-47f3-9efd-cd224a2f7721",
+        "path": "/openwiki/operations/configuration.md",
+        "title": "Configuration and Runtime Operations",
+        "purpose": "Consolidate install and invocation surfaces, environment-file precedence, API and embedding settings, project/user .claude configuration, MCP configuration, local state directories, supported platform behavior, and the scheduled OpenWiki update workflow.",
+        "seedPaths": [
+          ".env.example",
+          ".github/workflows/openwiki-update.yml",
+          "README_EN.md",
+          "python/mini_claude/_dotenv.py",
+          "python/mini_claude/mcp_client.py",
+          "python/mini_claude/prompt.py",
+          "python/mini_claude/tools.py",
+          "python/pyproject.toml"
+        ],
+        "relatedPages": [
+          "/openwiki/concepts/code-graph.md",
+          "/openwiki/concepts/context-and-state.md",
+          "/openwiki/integrations/mcp.md",
+          "/openwiki/integrations/model-backends.md",
+          "/openwiki/quickstart.md"
+        ],
+        "instructions": [],
+        "status": "pending"
+      },
+      {
+        "id": "e257fa91-1cf7-4c67-915c-74fc39ea78d9",
+        "path": "/openwiki/testing/verification.md",
+        "title": "Verification Strategy",
+        "purpose": "Map unit and integration commands to the Python test suites, explain SDK-dependent test skips and isolated fixtures, identify high-risk behavioral contracts covered by autonomy, skills, and code-graph tests, and distinguish stale TypeScript script references from available test surfaces.",
+        "seedPaths": [
+          "package.json",
+          "python/tests/test_autonomy.py",
+          "python/tests/test_autonomy_flow.py",
+          "python/tests/test_code_graph_tool.py",
+          "python/tests/test_code_search_benchmark.py",
+          "python/tests/test_skill_agent.py",
+          "python/tests/test_skill_review.py",
+          "python/tests/test_skill_tools.py",
+          "python/tests/test_skills.py"
+        ],
+        "relatedPages": [
+          "/openwiki/concepts/code-graph.md",
+          "/openwiki/concepts/skills-and-subagents.md",
+          "/openwiki/quickstart.md",
+          "/openwiki/workflows/agent-turn.md",
+          "/openwiki/workflows/planning-and-autonomy.md"
+        ],
+        "instructions": [],
+        "status": "pending"
+      },
+      {
+        "id": "1162ded1-ca7a-45c8-898c-d8edec4ec343",
+        "path": "/openwiki/workflows/agent-turn.md",
+        "title": "Agent Turn and Tool Execution",
+        "purpose": "Trace a normal user request through prompt assembly, streaming model calls, tool-call processing, permissions, early/concurrent execution, result persistence, message updates, budgets, retries, aborts, and session save for both provider protocols.",
+        "seedPaths": [
+          "python/mini_claude/__main__.py",
+          "python/mini_claude/agent.py",
+          "python/mini_claude/session.py",
+          "python/mini_claude/tools.py"
+        ],
+        "relatedPages": [
+          "/openwiki/architecture/agent-runtime.md",
+          "/openwiki/concepts/context-and-state.md",
+          "/openwiki/concepts/tool-safety.md",
+          "/openwiki/integrations/model-backends.md",
+          "/openwiki/testing/verification.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for the request/control flow."
+        ],
+        "status": "pending"
+      },
+      {
+        "id": "605a18a1-820b-4a88-b166-a5fd67ffb39c",
+        "path": "/openwiki/workflows/planning-and-autonomy.md",
+        "title": "Planning, Goals, Loops, and Auto Mode",
+        "purpose": "Cover REPL commands and the distinct control paths for plan approval, goal evaluation, periodic/dynamic loops, interrupt handling, schedule_wakeup scope, and the two-stage fail-closed Auto Mode classifier.",
+        "seedPaths": [
+          "python/mini_claude/__main__.py",
+          "python/mini_claude/agent.py",
+          "python/mini_claude/autonomy.py",
+          "python/tests/test_autonomy.py",
+          "python/tests/test_autonomy_flow.py"
+        ],
+        "relatedPages": [
+          "/openwiki/concepts/skills-and-subagents.md",
+          "/openwiki/concepts/tool-safety.md",
+          "/openwiki/testing/verification.md",
+          "/openwiki/workflows/agent-turn.md"
+        ],
+        "instructions": [
+          "Use Mermaid diagrams for mode transitions and autonomous-control flow."
+        ],
+        "status": "pending"
+      },
+      {
+        "id": "42c3978a-7034-481a-879a-5a0ed73c91b8",
+        "path": "/openwiki/quickstart.md",
+        "title": "Mini Claude Code Quickstart",
+        "purpose": "Route coding agents to the Python CLI runtime, its safety and extension domains, persistence boundaries, and the focused validation suites; explain that the TypeScript manifest describes a missing source tree while the checked-in implementation is Python.",
+        "seedPaths": [
+          "README_EN.md",
+          "package.json",
+          "python/mini_claude/__main__.py",
+          "python/pyproject.toml",
+          "python/tests"
+        ],
+        "relatedPages": [
+          "/openwiki/architecture/agent-runtime.md",
+          "/openwiki/concepts/tool-safety.md",
+          "/openwiki/testing/verification.md",
+          "/openwiki/workflows/agent-turn.md"
+        ],
+        "instructions": [],
+        "status": "pending"
+      }
+    ],
+    "deletePages": []
+  }
+}

@@ -348,7 +348,7 @@ class Agent:
         breakpoint on the static core. Everything up to and including that block
         (the tool schemas render before `system`, so they are covered too) is
         cached server-side; the dynamic tail sits after the breakpoint. This is
-        Claude Code's scope-omitted path. See how-claude-code-works ch3.6."""
+        the provider's scope-omitted cache path."""
         plan_suffix = self._build_plan_mode_prompt() if self.permission_mode == "plan" else ""
         dynamic_text = (self._dynamic_system_context + plan_suffix).strip()
         blocks: list[dict] = [
@@ -758,7 +758,7 @@ class Agent:
             return
         # Offer-cloud decision point (interval >=60min or daily wording). Real
         # Claude Code asks whether to convert to a persistent cloud schedule that
-        # survives the session; this teaching CLI has no cloud, so we only
+        # survives the session; this local CLI has no cloud scheduler, so we only
         # surface it.
         wants_cloud = (
             (spec["mode"] == "interval" and spec["interval_seconds"] >= OFFER_CLOUD_THRESHOLD_SECONDS)
@@ -767,7 +767,7 @@ class Agent:
         if wants_cloud:
             print_info(
                 "(Real Claude Code would offer to convert this to a persistent cloud schedule "
-                "that keeps running after the session ends. This teaching build has no cloud "
+                "that keeps running after the session ends. This build has no cloud "
                 "backend — continuing in-session.)"
             )
 
@@ -2082,3 +2082,4 @@ IMPORTANT: When your plan is complete, you MUST call exit_plan_mode. Do NOT ask 
             return answer.lower().startswith("y")
         except EOFError:
             return False
+

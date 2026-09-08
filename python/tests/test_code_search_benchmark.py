@@ -16,6 +16,7 @@ from evaluation.code_search import (  # noqa: E402
     create_source_snapshot,
     percentile,
     provider_error_code,
+    render_report,
     routing_downstream_metrics,
     summarize_relation_paths,
     summarize_routing_predictions,
@@ -173,6 +174,23 @@ class CodeSearchBenchmarkTests(unittest.TestCase):
         self.assertEqual(result["successful"], 2)
         self.assertEqual(result["errors"], 1)
         self.assertAlmostEqual(result["score"], 0.4)
+
+    def test_report_renderer_uses_chinese_labels_and_method_explanations(self):
+        report = {
+            "generated_at": "2026-08-16T00:00:00+00:00",
+            "models": {"chat": "chat-model", "embedding": "embedding-model"},
+            "repositories": [],
+            "routing": {},
+            "out_of_repo": {"status": "offline_mode"},
+        }
+
+        rendered = render_report(report)
+
+        self.assertIn("# 代码搜索量化评测", rendered)
+        self.assertIn("`fts`（FTS 全文检索）", rendered)
+        self.assertIn("`semantic`（语义向量检索）", rendered)
+        self.assertIn("## 路由评测", rendered)
+        self.assertNotIn("# Code Search Benchmark", rendered)
 
     def test_context_deduplicates_nodes_and_honors_character_budget(self):
         source = "def alpha():\n    return '" + ("x" * 100) + "'\n"

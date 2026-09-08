@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:7c7d717f0e8b28a2299c788795ce0adad3779a295c541dac278b7267288d2c72",
+  "claims": [
+    {
+      "id": "claim_3433f0939c9d4c3f9144e6bc7a890c46",
+      "statement": "The CLI loads environment configuration, resolves permission/backend credentials, creates one Agent, optionally restores the latest session, runs either a one-shot prompt or REPL, and closes the agent on exit so MCP resources are released.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/__main__.py#L232-L368",
+          "version": "repo-lines-v1:sha256:548d526898c1f8517f47ada40cecc6ac090e25a6baf911eae800c903b8c0048f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTM3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI3MGJjNTEyNjVkYTNjNDk0YmRkMjk0MDhjMGUxNzc2NjViZmVhZDZmZDI3OTM2ZjA1OWQyYzU1N2IxOWEzY2UxIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIxNzdiOWZjOWQ2OGJlMzRlMzdjNWUzOGJmZThlMDE5ZjljMTk2MzA0NGY5OTVkMWJiZmRiOWI1NzAxNjBmNjEyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiNDM0ZDJkNTI5MTcyNTMwYjc1ZTAxZTUyNmY3MjM3OGE0NGQ2MTA0MjM4NDNjY2VkMmNkYzU3N2I0YjEzODA4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlOWY3ZjdhYTE2MzA1NjdjMWI1ZTY2NDRlMjFjYmVjODNhNDM5MzNkYzViMGRhMGQ5MGNkNTNiYTQ4ZTkxMGQyIn0"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1505-L1509",
+          "version": "repo-lines-v1:sha256:cf19100d6feb2afe6f3fa95c23126f8ba1668b2cef2e48e9143102e0945679e1:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmRmYzgwODUwNTIzOTdlMzA0YmI1NTg2NWEzYzgwMDZhZGRlYzM1ZjRlNjk0ZjFiZjI2Y2QzYjFmN2ZkZDU4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDY3NzBhMzE4ZGJhOWYwNWQ4NWE1NWMyYmYyZTYyMWQzYTQyNTNlY2YzMDdhMzJjNjQwNTcwODdmY2RhNzk1OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODJhNzFjMDdkMDc1ODVkZGEzZGMxY2JhMmVmOGE3MWI4ZWY2YzgxODZhMWJjMjc5YjMxMTE0ZWU0ZWRmM2YxZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzhkZjA5ODI4ZTZiNmNlNmQ2M2Q3ZGE5M2Y0ZjM1NTJmZDIwM2JhMDEwNDVkMTliNDM1NmNhNzkyZWZkMzI0NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_390ffcad2d714550aa83b211a15e8e32",
+      "statement": "Agent is the session runtime: it owns provider clients, separate provider-native message histories, tools, permission and plan state, budgets, cancellation state, MCP manager, memory recall state, and autonomy state.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L182-L304",
+          "version": "repo-lines-v1:sha256:52089d000935cde3bcdbbe8727abdef5a0a2c0f0d6346377fed7c7d9dec70bb2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhOWFkZTAyZjQwNWIxMmExMzc1NGI5MjJmMTYxOWIzNzRjYWNkZjUyYzRlMWUzMTA2OTI4MDA1NTZjMWRhMTBjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYTlmOGMyYmM3YTE0MWEwMjJhZjNmZWI4YWI1MDA4ZWMyNTc1N2VmMjRhY2QwNDlmNTA4OWE3NGI3YzlhZTgxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIxOTI3OWZlZTk1NmIzOWIzZTc0Zjg3Nzc2ODBkMTlhNWZhOGE3NTQ5MzkyYjdjNDc2NjYxYjliZjdkZjdkMzFlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIyMDYyNzEwYWUyZGNjZDk5MTNlNGZlYjkwYmY2MWNiNzk2YzQ3ZGJiN2U4YjljOWY0YzUyNjdlNmRiYzQ5YzQwIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_c7e8f7e70d7143fe926e436b1c02ae71",
+      "statement": "The runtime keeps Anthropic and OpenAI-compatible transcripts in separate native formats: Anthropic uses assistant content blocks and user tool_result blocks, while OpenAI-compatible history uses an initial system message, assistant tool_calls, and role=tool messages keyed by tool_call_id.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1642-L1647",
+          "version": "repo-lines-v1:sha256:2b2b3a54573e7ba3b805863d1496bbb2b81abc992191a3d1ba812be2073ca239:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWI1ZjY4NTY2NWY4ZjQ1YzU5ZDFjMTVkNGRjMTM1ZjE0NGYwYmVhM2JiYjU4YmY1ZmNkOTA3YzE3MTFiYjg0ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmY1YWJiNjAxNGM5N2JhMmViOTM0ODc4ZTM0NTQ2NDIzYmYzOGU5NTRiOWZjZTNjZTQwNDQwM2FhMzkwZTgwZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2JhMjIyYmQ3MTVhNzY2NDA2YzYxYjE2NTAxOWZiNjE4OTM1ZDFmODM5MjRlYTkzMmNmNjAwZWY4NWMzOTE4MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTE5ZGQzZjM0YjdlZTcxZWQxMGMwYjBiMjA3M2ZiNjQ4YTgxN2EzNmZjYjRmN2Y2ZDQzMmU5MmQ2ZmVhNTc3ZCJ9"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1737-L1741",
+          "version": "repo-lines-v1:sha256:ccd43aa5e3c8d1ef032ce2c6dabcbe191affc2ee5188521b5018eb69152c6100:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGU0M2NiYjUwMjg3NDM0YTAwMTM2NmU5YzAwMDdjYjQwOGY3ZjI4OTQ3ZmNkOWYyMDBmODE5ZTRlMWFlZTZjZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjI0OGYwZmE5NjViM2NkMjM3YjU1MzQyNTk1Njk1Yzk4NjM5MTNjMjc5MTZmZmFmYjBiYTlmYmMyZWE3ZTE2OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGQzMDExYjlhMWVkMzlhYTZkMzE2Y2NiMzZiZWMxNGM0MTNjNTU5NDBkYzhjYzBkNDM0MmNlODJiY2NmMTA0OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGFhOGI4NTIyMDkyNzM0MGE5MGUwNTdjN2M2ODQ1MTk0YTA5MzQwNzliZWFmZmZkOTJjZmExYjQxYzVhNzM1ZiJ9"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1880-L1885",
+          "version": "repo-lines-v1:sha256:dc4fb8e3d1004d3389d10e9cb8ad07343fb5a36af5e44b6e652ef1175441b781:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjVjNjJiMjZlNjY5Nzk0MzEzMWY5NTg1OTBmMGMyM2EwYTA5ZWQ5M2YyZjlkY2YwOGQ2MzkwMmM3MWJiNzBiMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2Q5YTk4ODc3YmM4NjBjOWI5NTQ0YWUzZmExNmFjYzczZjM4NDkzNTdkOTQ0ODRiZjg2MGY0Y2NmMjY4ZDc3ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjViNjBjYTU5M2E1OTFjZjlhOTc4ZjcxNGMyNzNmN2ZjNGM3YzRkYWMyODM2ZDUwZGY5MzM1YTg0OTQwZGM5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmVkNDJjNWFhMWY2ZGNkNTdiNWVkYTY2MDU5ZDJmOGRjODcyNmM3MzcwNjlkNzM2YjA1MGE2MTBlMWU2MDYyOSJ9"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1973-L1993",
+          "version": "repo-lines-v1:sha256:3a0cd6065d1513147491cdaa9874fb3d697cc7b6f7cd0879c6f65a2f1777bcfa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMTZmNzA5ZTZkZWRiZmIwNjI2YjU1Y2ViZjliNzAyZWE0OThmNzY4ODUxZGJkN2RjYWEyOTQzZWIzZGE0NzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExMzc3MjlkOTdjY2ViY2MwNDA0ZWU1NzllZmFlOGM5NzU1ZGQyYWZlNjc5OTNmZTg1NGEwMDgxN2VkZmNlZGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlZmQ0ZTQ5ODM3NzcwNGIzZmRjMjYzMmY5ZGI1MmYwZDM1MjQ0ODQyN2I4NjZiOWI0ZDA5Y2EwYzdlMWY3N2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiNTE4OTM3MDdjZmRmNTI1Y2ZiNTY1MDAzNjI3YTVkNzZmNjc4OWFiNzAxOTVkYThmNjQzNDYwODRjM2M5OTQifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L320-L333",
+          "version": "repo-lines-v1:sha256:ba2314fb27731b7d7fc87f243e93b00f8b8c047b65b5c10eed2898abcc7c2a63:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2MTBhMmY5NjI4ZDFiNmZmYTJhNDgyODhiODI3NWEyNzg5YmY4ZTIwMzE5ZjM5MGMxMWRkOWI2NmQ3MDA1MjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5YjJmOTY4ZDJlNDA4MzM5ZGFlOWYwNDlhODcxYzc0YjQzNjU5NzUxZTdmMTk1N2U3NWRiZjIzZWM5NjIyZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZGE2Y2YyZDg0Y2QzMWMxN2FjZWE2M2UwNDQ3ZjcwMWJiNjk1MGM3OWVkMGQyODNmZjU5Njc5ZDM5NmYyMDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjZTE3MjZkZjlkODZlNGEwZTIzYmZhZThhMmU5ZGM1YzE4MTNlZDE1YTE0M2Y4Y2NlMTBkMTQ5OTQ2NDAyNTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8f69b2e2e0a34bd887f4be98605c6628",
+      "statement": "Prompt construction separates a static cacheable core, a machine/project-specific dynamic system tail, and a CLAUDE.md/rules/date reminder injected into the first user message; Anthropic request cache metadata is applied to copied request messages rather than persistent history.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1554-L1577",
+          "version": "repo-lines-v1:sha256:5726a06442bd240fc16e818ea92669d38c9d21fd6a9d2449f1b7708fe44ee32d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1YWUwNDVhNmI2MmQ0Y2QwNDliOWE2YTQ5NmFiMjI4YTAwZDdmMjJhYjRlZjQyYmVhMjY3ZmQ3OTFlOTVlNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzYTJhNmQyNmEzYmYyYWU3OTUzOTBiOTgxMGNiMzUwN2ExNzExZDNiMmUyNjZhYWI4MGVkNTNkMDAwOTE0NzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyZDBlNGM4YmUyYTYyNGI0ZGFmODdmMjBiOWNiMTMyMDg1M2ZmNmJhN2Y4NzYwOGUzNWVmZDRkMTdmYTk2NjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4NWRhZGQwNmMzYjJlNzJiODMwMDE2YTg4ZWRmOGIwZmRlMTY4ZTc0OGJkMzllNTljNmE0ZDgwY2U3Yjg3OWIifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L345-L381",
+          "version": "repo-lines-v1:sha256:4ff7ccd204ccbfe64e5c911dea012491ded11393ca0bb8fcfd8efddd098001a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzN2FlZGM2ODUyMjk4MGFiYzVhOTRkZDQwOTI5ZTU1YTA0ZTU4ZDU1OWY2ODZhMDNlMjliMWMzMjg4NmJmMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwNDljNGQ5ZmY4NTI3YjQwOTQzNDQwNjRlOWUzYTBhNmEzZjU3MTJmMDNlYzcyZGFjYzM3OGY0ZWVkODY2NDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRhNzFhNDcyYTYxN2Y1YmU5ZDkxOTNlMGE0ZjNkZGY2NWJkMWRkYWZmYTAxN2QxMmRkZmMyNWM5MjhjMjM0OWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzMmU0ZmMzYjRmMWJkNDE2N2NjYmY0MGNiOWViNjY3ZTZmZjFkYWJjNWQ1YzdjNGMxOTA4YTRjZDdlNjNjMTgifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/prompt.py#L198-L268",
+          "version": "repo-lines-v1:sha256:e36d89fb78b942540e7a098a333fdebadb1255bca8e167c6d36a43603ed85e24:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2ZjZmZTEyZjI1N2U3MzZhOWQzOWE3YWYzODYyMWU4ZTI2NTFiYTU3NTM1MWE3YzY5Yjg1OGVjZTczYTFjMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMGY1YjEyZGUyMDQxZjFjZWJmYzg5ZDk4ZTY0NTlhZWFkMDBjNGI3YmExODZkMzM0ODg3MWNmZjQ3ZGI2ZGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1ZmZhOTQwN2QzOTI1ZjIxM2E4MjZjNGYxMTkzYzQwMTJiZTAzZGFkYTIyMzc3OWI3NmRlNGQ1OGIzY2Q5NjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkyNGVlODc5MDMwZGU5MzJkNGZhMjc1M2VmNDYzMzRiMWY4NjlkZmYxYjgwMmU1ODQzYzc4YjMwODliNTA4YzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a9b78f825109423eb0ddedc30dd9c7bb",
+      "statement": "Agent.chat lazily attaches MCP tools only for the main agent, delegates to one provider loop, tracks the current task for abort, then autosaves and may start background skill review only for a completed main-agent turn.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L464-L489",
+          "version": "repo-lines-v1:sha256:3423596ebfadd2f2ec34821d370acc4e3739fa8318eeb7c0e893c44bd699f635:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlNDZmMzgxMGM5Nzk3NTg5NmY0NzIyYTJkZTdkNWU3MzgyNWZkMDY0NjY0ZmI2M2Q3MGNkOTY0N2UwYzRmYWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3YmVjZTEyMzY3NDUwMzQ2MTkzYzA1MjBhN2Y3NmU5ZDhkNDg1OTcwNjZhZWJjNWI1YjBmM2Y4MDA2ODJmOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0MTlhNzYxMTEzMGFiODU5ODRjODc4YjU0ZTMyZjQ4NGY3NTM5NDQxNzU3MGM0NTRhZTVlYmNhMzZkMTNhOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzOGY5MjEwNDE1MjdkN2M5M2FhYzJhODhkZTczMWM3NWI2ODZjYzYxMjZmZDliZDViMzFlZGZjMjNjODllMTcifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L518-L536",
+          "version": "repo-lines-v1:sha256:3093acc53267f6ab6fbf05c127332fc34967504e2f6ce36979516c077acc96c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwZGY4YmEwZWE5YWNmNDBlMGZjNTU2N2Y0OGMzOGZlZTRlMjM0ZWVmMjI2YTMyNDVmZmQ1ODBmYjcxNmI2NzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2ZGNhZDQyNmM4N2NhMTM3N2QxMDkxYjlhYjNjZGI2MWFkNDdlYmZiZTY0MGRiNzgxMzg5NDkwOGQ1ZThmMTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjOTI5NDgzMDMzZjYyMTRhZWM2MjI1NWQwZDAwYWVhY2U2NjE5OGU4Y2YyMTNhZGQ2ODJkZDg2OTJkZjBkYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwZDEyOGZmMWUzYzU5NmIzZDQ1Yjc1NWM1NTU3ODU3ZjgxNzdmOGY2NWRiM2EwOTYwZDI2MWY1MzEzZTQ3NzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_490b7beb470444829877c35244b960e2",
+      "statement": "Both provider loops append user input, compact at a safe turn boundary, poll nonblocking memory recall, stream a model response, and continue tool execution until a response has no tool calls.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1579-L1657",
+          "version": "repo-lines-v1:sha256:c7aec7648afa3c2e46e5f8381ce3bc82620bf328ef40d8f853b6ace176d3c24c:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkMzVmMjBiYTA5NWEyNWE2YjRkNzFhZmQ2ZDk3YzVkMDY3NzExZGYyMDYzNjdhZDY1ZDAwZjZlMzZiY2RlODUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxYmQ1OWJhZjEwOThhZTk2ZmQ3ODY0ZjM2ZTg4MjJjNTExMWFlMGZkNzBmNmFiODI2MzZmZWUyZTg1ZjRhYjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjN2M2ZTY0NDNiMjE5NzYwZmQzNWY1ZmM2MDVjMWUzMjg2OWE1NzIwOGQwM2JmYjI0ODRmMGZjNjNiM2FmZTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlM2Q1ZWNmNTJlNGNjYjFmMmI3MDIwZTVlOWI5ZDkwNTEyOGI0NDE3YzQ4MzJkMjM2YWQzZjNhNjg4YWFkZGYifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1832-L1890",
+          "version": "repo-lines-v1:sha256:8cb7c36b5b6edaddb637b70eb83bcb53e88e53124f73dfa3e000e576043f505e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkYzlkNTk4YTJmNTk5Njc5NjlhNWMzZjU5ZTg3NmJjNTY2MGQzZWRkZTcxNzRhYzE4MDQzNDVjZTQ0Yjk4ZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxYmQ1OWJhZjEwOThhZTk2ZmQ3ODY0ZjM2ZTg4MjJjNTExMWFlMGZkNzBmNmFiODI2MzZmZWUyZTg1ZjRhYjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyNWQ2ZjgwNzkyZmE3NjI0ZDUwNGMzMjUyM2RlNGE0YzhmN2NmZDEwMjNhNmRmMDc3NDMxZjYxZjI4NWEwM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlM2Q1ZWNmNTJlNGNjYjFmMmI3MDIwZTVlOWI5ZDkwNTEyOGI0NDE3YzQ4MzJkMjM2YWQzZjNhNjg4YWFkZGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_22f01c1ebc54466dbac8a048f05d06bb",
+      "statement": "The runtime preserves tool-call/result pairing when a budget blocks execution by appending a refusal result for every pending provider tool call, and compaction is restricted to a plain user-message boundary to avoid orphaning a tool call from its result.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1027-L1078",
+          "version": "repo-lines-v1:sha256:768c332f214c0c8758306a41a504a23fa2fbb90c1d1b23094e252c5a18d0c5f2:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxMzM3NzkyMDg5MDFmMGM4MmU5NTY0Y2ZhYmY3NTFiNDZiMDdiMGNhOWQ3NGIxMDkwZTc0NDkwYWMxM2Q5ZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3OTQxZTNjMDhlOWJhYjFmNjgxYWFkMzJhYTdjYzJlZDFlNjIxZWY2OTY5ZjQyMDExMmU1OGY5NzZlOGJkNGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3MmMxMTk0YjBjYzc2ZmMzZWMwMjI1MzViZTljNTM3OGJiMjM5OWI4MzZmMzllYmQ1NzE1NjNjNjZlNDlhMzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlMGE2MDEwZDg5NjUzNDZkYWY4MjVmMjU0MzZlNTY4MjM2MzhhMjAxMTVkMGUwZTNiODczMzk1Y2ExYjM3YjYifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1664-L1678",
+          "version": "repo-lines-v1:sha256:3e524b55d7f85e0c0ac3a5be928550b94a148f18e3bd52387da722f989e9136d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyZTMyYzI2ODVkOTZhNjllNmU2MTg0ODNlNzE3OTQ3NWUyNGQxNmI5Zjg5YjI2Mzk5NzdlYzJjNGZkZGUxNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwMTNjMTk5Njk1MmZlOWYwZGI3MDY4MzQ2MDNkMTdlMGVhYjFmY2I4ZWY4ZjcyZDExYWM4NmRlZjQ4NDdjNzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyNTE0NjdmNGExNGIzNzg2NWJkMWRiMzk3MWM1ZmExMzA5NGVmOTU4MDE1NmY4YmJkYjBiOGVjODlkZDc2M2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhOWUwMDUxNmEzYjQ1MDVkYWUyMmU5YzgxMGQ3ZTUwYWRlMTdmZmEwNmZjNGIzOWI3MzNmOTQ2NTc3Yjc0OTMifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1897-L1910",
+          "version": "repo-lines-v1:sha256:6c776271a43c3d6581bc59b05b20da343e89878977cb87c1dc0fb70e18bcd814:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyZTMyYzI2ODVkOTZhNjllNmU2MTg0ODNlNzE3OTQ3NWUyNGQxNmI5Zjg5YjI2Mzk5NzdlYzJjNGZkZGUxNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwMTNjMTk5Njk1MmZlOWYwZGI3MDY4MzQ2MDNkMTdlMGVhYjFmY2I4ZWY4ZjcyZDExYWM4NmRlZjQ4NDdjNzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyNTE0NjdmNGExNGIzNzg2NWJkMWRiMzk3MWM1ZmExMzA5NGVmOTU4MDE1NmY4YmJkYjBiOGVjODlkZDc2M2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3MTE4MDcxZWQxNzk0ZjhjMzM0NzIwNTczNDJlMmZkZTY2MzQyMzQ3ODAyZTRhYzBlNDg3YzEyMzhhOWE5NjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_20982056a1604b6d847c217c8e870b08",
+      "statement": "Anthropic may start automatically allowed concurrency-safe tools as their stream blocks finish, while the OpenAI-compatible path permission-checks calls serially and executes consecutive concurrency-safe calls with asyncio.gather.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1602-L1620",
+          "version": "repo-lines-v1:sha256:acb975013b5c328efe5a9f2141b818cc0f68319107ac318c4c38d506b43e9344:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3NmZhMDBjZDg2YjZlN2I3NzNhMGIxNTkwMjZjYzEwODNmZDlkYmQ0MzEwYmJkZDY3MGMzMjUzYjgxNjAxYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5MzQxYjk0ZjE1MWYxY2RjYTkxZjhkYWZjZTdiOWI1MWZmZDNjNDJjNjAxOGFhZWI1ODFmODMxOWJhMGQ5MzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2NjAwOGEzOGYyMjQzYzVjODRkODk3OGRkNjA5ODM1Zjg5NmMxZGIwNzFkNTY1MzZlZjZlNDA1NzQzZmEwMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmMTM2NjFhODc2YmUxYTcwMzg2N2U1MGRiOTliZDIwNzU0NmI0Y2E1Njk0ZDFkY2FlMzg1OTc0NDQ3Y2YwYjUifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1680-L1728",
+          "version": "repo-lines-v1:sha256:9bbf0d7dde74e6e7facd6c4f602fb9c5ba40339fd17211f29e54e2f75cb5548d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZjRkY2NkZGU5YjFhOWEzN2EyMzY0YmE5ZjU4NTkxZjAwYWExY2QzYzRlZWQ1YjAyMTYxYTZkZWVkYzU4ZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyNjIwNjhlMDJlYTlhNTNkOTA1OGY2YWU0ODM3MGYwOTE1YjQzZmJmMDBkMmI0ZGY3MmQyMDVlYjdjMTdhNjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmODdlYTJhY2FiYzZjZjViYmNmY2U0ZTA3M2QzYTg5YTU2ZGMzOWY5NTFlZDc0MTczNjI2ZjJiZjBjNDU4OWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhYTc2NmU4ODk0NThlNGU1YTlmNTg0OTQ5Y2EwMjUwODc0MzFkNTJkYzNiNGViMWQ1ODc5YTZmYjIxMzRiNWMifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1912-L1993",
+          "version": "repo-lines-v1:sha256:6a00a2f3348acf832cc64510a112191591eeaed11cd4b569b37dfc8547aef5ea:eyJzZWxlY3RlZExpbmVDb3VudCI6ODIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3NTI3NWE2OGQ4NzZhNjQzMmU4ZWQ1YmRmZGJjMzkwZmM4YjJkNzE4Y2QzYzY2M2FhZmNiOWQyNWI4ZTVkNGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExMzc3MjlkOTdjY2ViY2MwNDA0ZWU1NzllZmFlOGM5NzU1ZGQyYWZlNjc5OTNmZTg1NGEwMDgxN2VkZmNlZGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI2NjBlYTgxZjhjYzkyNjRiNDY2ZTIxYTE4ZjQxYTUxZjU2YTljYjJkYjQ0YTA5ODQ1NGY0MzA5Mzg5OTViZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiNTE4OTM3MDdjZmRmNTI1Y2ZiNTY1MDAzNjI3YTVkNzZmNjc4OWFiNzAxOTVkYThmNjQzNDYwODRjM2M5OTQifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/tools.py#L28-L32",
+          "version": "repo-lines-v1:sha256:3618a35ffb111f4c04d79ee55db280781a1c69cfafb2701b9257bf2fb3a2bd00:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODI0Y2NmNjVmZDJlYTE3NzYwODljZjY5YmM0ZTkwYzc5YjdlNzQ4YTE4MzgzMzE3NDJlNGUwZGJjNGVlYTc4NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjM0MWExOWQ3MmM2MWUzYWUyYjFhZjQyY2YyNjhlNTI5MjU5YjVhN2Y0NTFjNjljMTc4NjdmYThlNDIyOWMxOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDNmZmU1N2FmY2MzZTc4ZTI2NzQ3MDY1MDkwZTFkMTk0ZDdjNTYwNWVmMDVkODQzNjExNWM1NWQ0YTc3YjNhNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_521f39be876940d0830b7bc95ee11127",
+      "statement": "Tool results larger than 30 KB are written under ~/.mini-claude/tool-results and replaced in context with a bounded preview and retrieval path before final truncation.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1222-L1250",
+          "version": "repo-lines-v1:sha256:b54810cd5d639404f5e6a7e4974180109916eb5493febf2e8f07e069bb6b471c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNTQ4MjhlZmU0ZDcwZTdiNTljNmU3MzIzMjRkMGQ1YTEwOGNkYThhYTBjZTU0MjU3ZmMwZTQ4ZTk1NzllNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhOWY4YzJiYzdhMTQxYTAyMmFmM2ZlYjhhYjUwMDhlYzI1NzU3ZWYyNGFjZDA0OWY1MDg5YTc0YjdjOWFlODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkxOTdjNmQ5ZGZlZDQzZTBhYTRlNGRjYmZjMTdmMmU3MTRkYTYwNTA1YzlhNjA1MjRmZTRmNjQ3ODEwM2RkMTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkxZTY5ZTY5MTU4MTAzNjc2OWE2ZDUzZjBkY2IwODkyN2U5ZjA5NTNkNzJlZTgyZTJiOWFkNjRhYTM0ZTA3YzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0b2f5c7e240d4bb293bd0d99864d76e1",
+      "statement": "Persistent memory is stored separately from sessions in a project-hashed directory; main-agent turns start bounded asynchronous semantic recall and inject settled results into user-message context, while subagents skip prefetch.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1511-L1552",
+          "version": "repo-lines-v1:sha256:2766d685e7aacf87b222204de763b1b5c2427ac680c32bbf1b6be20f6fd4a8ab:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyMDJiYTllOWRjOTM2YjQxYWMwNjAxMjhiMzk1Y2EwYzY0MzMxOTZiZDdkY2MwMWRhOGQzY2QzNjM1NGNhNWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkMDAwNzg3NWRlOGY5MmQ5MmI3ODdhMDE4YzE2YzAwMDQxOGJkNWY5NDk5MjNiOTBmNGQ2M2M3ZWMxNmQ4M2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNDMyNWUyM2ZlMmZlNWJhZGRjNTQ0ZTkzMTQ5ZDE2YjJmYWE1YjM2MGE4NjFiYTYzODgyNDRhZWVjN2YyMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlN2RhM2Y0YzI0MzM1OTMyZjFmMGZkNzg0OGE2OTUxNmI4Yzk4M2NiNzZlYmNhZWIzYjVlNTM3YzQxY2QyMDUifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/memory.py#L151-L154",
+          "version": "repo-lines-v1:sha256:4eecdfdb7c465b0eaf70f352323c5d740f82b248813505fa24f5518d32f98261:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzg4Nzg3ODdjMDQ5ZTM5MzM4OGRhYTQxODQxMWNhNDYyNDM5OTI3MDkyYzlmOGRkN2RlNDQ1MmFjYWJlMTA1NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ViNzAyNTc1OTNkYTA2ZjY4MmEzZGRkYTU0YTlkMjYwZDRmYzUxNGY2NDUyMzdmNWNhNzRiMDhmOGRhNjFhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDE4Y2U4MmU5OThlMWIyYTdiZjc2MDEyNjU4YzMxOTFlN2U5ZDdiNWUyZTZlMWUyODY5NzI1NGFkNDZlNGFkYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWRjYTRiNThhMTlmNmM3ODFmNTU1MmJkNDkzYTM3YTQwOTUxZjI1NzNiMTdjZmEwODRlMjY1Yzk0OWRiYTVmOCJ9"
+        },
+        {
+          "resource": "repo://python/mini_claude/memory.py#L301-L337",
+          "version": "repo-lines-v1:sha256:9c3923dccc54441f8b9147582d32a419083aad78cb85af47f93181de1874e55a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGFlNTQ1ZmYwNDhlMTllZmJmYThmYjQ0YWViMmFkYmMzZThhMmRiZTM5OGVlMWM1YThlNTU3NjU1YzgyMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5MTgzMTcwMjg5MDk4MzRiZTgxZTljYWRmNmVlN2VjNDllNGE4Yzg1NzEwMTliNzcyNGJhMDQwNTVmMmFlODYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1OGZlNTMxYzFlOWNjNmE2MTNiY2I2ZTRiM2U2OGRjYTllMGE4NmM5OTQzNTk4MmVjNDE3YjMxMWI0ZDZjZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4OGM5ZTU3MjQwODE0ZDBlNDhlMjU2MmYxNzEyNDIwMWRjNzA4MzgxMjViMzljMzUyNDdiZTg3ZmM1OTM2NzkifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/memory.py#L43-L55",
+          "version": "repo-lines-v1:sha256:5e4351dbbe0a4f5a429bd95a3a956497d12cb6f0356702be8743b6f2b21c30ad:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNmJlMGE5MjkxOTRiZjljZmIzYTM0MzhhZGVlNzFiNjUzMWFhOTFhYWVmMjMwNmIxMjI2MmVhODc4OGJmYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2YzQ4NGJhZWZiMzMyNzBhMjU3NjlkM2I3Y2ZhOWIwMWI5YmY3ZTc3ODdhYWY1MTUxMDcyYmRhZjM5Nzk0OTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3NjY5ZTYzOWNkNGFlM2ZjMzhmZTgwNWUzOGQ2YWM0MTQ0NzIwYmFkOTIyZDU4MWE5YzViM2UwYmYwYWIzNGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef197219c1d041569732151858432678",
+      "statement": "Permission checking evaluates deny rules before mode shortcuts, enforces plan-mode read-only behavior, supports confirmation and dontAsk behavior, and Auto Mode retains static floors/read-only fast paths before using a fail-closed two-stage model classifier.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L902-L970",
+          "version": "repo-lines-v1:sha256:64a0fc3ca7adb2d586eb6ba331092a8b0c47181555d87e6148fd7120d93fdd72:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjNjVmMjM1MzNiZmQ3MzA5NzlhZGI3OTM3MDRmMzIwZTQ2YjdlMDU3MDYxODg4NjcwZWQ3YWFiYTQyZjg0NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3NjgyMzYzNzZkZjAyZDQxZjQwNWYxM2ExN2IwNjRjYjkzZjY0Yjg0YmY0MjVhMWMxMGVmZWVhMmRkYjVjY2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY0NmY5YjUwMWM2NDk5YzZlMmI4M2MxNDc2YzdmOTk4ZWY4Y2IyZDBkMWU1YTk2ZDBlZmJjNzY5Y2VmYzlhMWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNkYTJlYzQzZmZiN2ZlN2Y2YWFhOTVmNjAzZmEwMzAxYmQ3MzQ0ODk4OWQxZjA0YjQ1M2VmNzhmZjkyM2MzOWIifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/tools.py#L686-L747",
+          "version": "repo-lines-v1:sha256:67a2691f0e683234cea02d57da11ea5f4ab2c9d232331fe090796ab12636ddc9:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzYjNmYzFmODRiYWM1NDFkZDRjZDcwMmE2NWM1ZjIwZDM4NjI0YzFmNDdmNWRhYjk4Nzg4ZmY2MjVjNzI0NDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlMjY5NjNlYzkwMTgzM2RmYjVjNDEwNzU2YmU0MDJjNmUwMjMyYjcyNzU3MjA4MWEzNzVlNGU5NjcxN2VhNmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyZTA2MzAyMTQ4ZWNiODU5MzU4NzEzOWZjMjZkOTM1YTc1YWM3NDkyOTJlNjIzZTg4NjVjMGY3MmJmMGM3OTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4MDg0NmFiNGI0NzcwM2YwMWI2YjkwYTJlYzFlZWY5M2ZmNzUwYzUxMjgwZmJhYjY5NjA3NDY1MDIyNTViYjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1221da80ab6848f4a0daed8cb7db802f",
+      "statement": "MCP configuration merges global settings, project settings, and .mcp.json; the manager launches stdio JSON-RPC servers, discovers prefixed tools, routes calls to their server, tolerates individual connection failures, and disconnects all connections during cleanup.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1313-L1315",
+          "version": "repo-lines-v1:sha256:5401c6bdb86dc8daaf961c59bb858004f6707c5043e26cf38fe42160a3a0a501:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjMyZTBiNWViY2VhMTQ3OTEwMjc2NDFlZDExNWQ2MjhkNDMzYThkYTFlNjMyYjBiNzE4MTY0MDBhMTc5NTMxMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTgwYTgxM2ZkN2YxNDcxYjIzODI1OTE1ZDBmMThkMzEyNTNmMDBiMGNhNDc0YTI1OTY3Y2ZkNGEyOWJjZWY2OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDNmODgzY2ZhNjRkZjlkYzU2MWE3YjQ4NDU3NDMzMzY4NjY0ODhjYTM0Y2VjZmU4NzA1NmJiYTFkN2M4MjVmNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGZiOTZjZTk2MDVjMGI5NTAxZjIzNzQwNjNiMmFhZDE0MzNiNTg0MTI3YjJjYjkwODE1NDhiNTc1M2IxNGZhOCJ9"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1505-L1509",
+          "version": "repo-lines-v1:sha256:cf19100d6feb2afe6f3fa95c23126f8ba1668b2cef2e48e9143102e0945679e1:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmRmYzgwODUwNTIzOTdlMzA0YmI1NTg2NWEzYzgwMDZhZGRlYzM1ZjRlNjk0ZjFiZjI2Y2QzYjFmN2ZkZDU4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDY3NzBhMzE4ZGJhOWYwNWQ4NWE1NWMyYmYyZTYyMWQzYTQyNTNlY2YzMDdhMzJjNjQwNTcwODdmY2RhNzk1OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODJhNzFjMDdkMDc1ODVkZGEzZGMxY2JhMmVmOGE3MWI4ZWY2YzgxODZhMWJjMjc5YjMxMTE0ZWU0ZWRmM2YxZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzhkZjA5ODI4ZTZiNmNlNmQ2M2Q3ZGE5M2Y0ZjM1NTJmZDIwM2JhMDEwNDVkMTliNDM1NmNhNzkyZWZkMzI0NCJ9"
+        },
+        {
+          "resource": "repo://python/mini_claude/mcp_client.py#L156-L250",
+          "version": "repo-lines-v1:sha256:981e2ee8a4b7b9f38a7f5c9c1a8ed0c1e91df7cc938f4c3f5dde2578976b6eeb:eyJzZWxlY3RlZExpbmVDb3VudCI6OTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxM2ZkNWUyZTJmMzVlZDQ1NDljODI0MmI4NWUxMTYzMTRlMTEwOWNmYmFkOTc0OWY1Y2JhYzBkNWViOGY1NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1YzAyOTE4NTc0Mjk3ZTRjYjBjZDliNzMxMGE3ZWQ5NDIyMjA5NzlhOWRkNTMzNDZjOGUyZGU1MDkxZTc0NzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzMjgwYWI4NWI0MmE3ODViYzFjYmZkZDRhOGZiYWJmYTQ2OWYzNTBjMmI4YjA5NWQyNTgyYjdmY2ZiNmM1YjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/mcp_client.py#L38-L141",
+          "version": "repo-lines-v1:sha256:ca9de5e22f93327859e4e9a95db857bde8f10046a57ca21438aaef5f7208923b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2MWY3YTk5NTQ3ZGM5ZWY3Y2Y1YjE3NTc5NzY5ZGQzM2IzYjA5OGMzYmQ2NzQ1ODVhOGY0Y2NkNjU2OGMwMzQ0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI2MDgwMTY2YzAzM2M1MDcyYjM2NmM2YjdhMWJkNTQ3ZWRmM2U5YzdhM2NkYmVjMzllNDc1ZDA2ZGJmNTlhMmI0IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlYjZkMjhhNWZhY2EyMmM1NzA5OGY1ZGU1MTE4MDNjNjllMjhiZWE3Y2JiNWEzZTRhYjMwODkwNTAyMGJhN2ViIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1YWEyNTNmYjQ1YWZiZDViNDdkOWJkOWIzZGRlMTQ1NTRkODk3ZTM3MTcyNTdkNDcxNTQ2NWYyMWI2ZDBkOWM3In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_893ce962acea4c7794af14b9a6a12d88",
+      "statement": "Plan mode is enforced by both runtime prompt and permission policy: only its generated plan file may be edited, and approval can keep planning, restore manual confirmation, enable edit acceptance, or clear history before execution.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1359-L1463",
+          "version": "repo-lines-v1:sha256:5f2ee48d54f264cbaf125e1dbe07d42b6be98bea3329b3e279aa583c4d4b0546:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJjZTQ2ODg4YjY4ZTJkYTM3NzZlMjM1MmQzMGRlZTU5ODAzZmIyNzRhM2Q4MzU3ZDM3OTUzZTBjNTk2Nzg4ZWUyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJlMTBkYjliYmZkYWQ0ZmRiOWEzZWQ5NDYzODNiMDk3ZTZjMTczMGZlOGYwNzc0ZTViMDZkZDUwMmVhZmQ5NDgzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5ZjBlYWMwM2FhNTJlMWFkYWJkYWY2MmI0YTA3N2UwNjlmYzE3NTMxM2U4YzgzNWMzYzkxZjY4Y2JlMjgwN2JmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwYzY0YmEwOTQyYTA4Njg3MzI2NDIzNTVjMTA4NDE2OTE5YTgxMmEzZjE1M2YxZjY3NTIxN2MyNGI0ZmU5MzBmIn0"
+        },
+        {
+          "resource": "repo://python/mini_claude/tools.py#L700-L710",
+          "version": "repo-lines-v1:sha256:be902e0a7135810bbe8cb990d22bb5068bcf1dc8bacd9b10642a99bfdc76318d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxYTE5ZjYxZDNhMmNjM2EwYzY3NmY5ZDBhYTM4MzE0MDhhYzc2NDQ1Y2ZkYzk1MmIyMzMxMDM2NDIzMzllNTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYjcwMjU3NTkzZGEwNmY2ODJhM2RkZGE1NGE5ZDI2MGQ0ZmM1MTRmNjQ1MjM3ZjVjYTc0YjA4ZjhkYTYxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmYmNiMDNmMGExMjVkZGNkYzcyMzMxN2QxMjEwNTkxMTc1YWU4OTIzYzg2N2E2ODM2MmVlODUzMGVjMmJjYzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2OTAyZGVmMjczYTA2YmI4MGM5YzYyY2IxY2M1MjIzM2RjYmFjODVhNDJhYzYwNTZmZTQ3MTNhYTVjNDFlZjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f3e7d712b9aa4f028c6f5da3949fb838",
+      "statement": "Subagents are isolated Agent instances with child prompts, histories, output buffers, and tool subsets; they reuse parent model credentials and skill store, return their text and token usage to the parent, skip MCP initialization and background skill review, and preserve plan/auto permission modes.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1319-L1357",
+          "version": "repo-lines-v1:sha256:f6480a308cbc13a2a82e81fa961d8ec4384877810bbdf273bb7cde442e200de5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1YWQ3NTNmZDRlYTJmMDk4NmUzNjFiMzNjMTI5Y2UwOTExYmEwMmY3NDIzY2Y0ZjU2YzY4MTdjNjYzYTk3NWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3ZWY3ZmRiM2JmZTZiZGJlMTM0YmRmMzgzYTQ0MmFhYzk0MTJlYzQ4MGJlMjZkY2U4ZTBmMTZkOWZkNGRmYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmYjk2Y2U5NjA1YzBiOTUwMWYyMzc0MDYzYjJhYWQxNDMzYjU4NDEyN2IyY2I5MDgxNTQ4YjU3NTNiMTRmYTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0ZjE0NzAyYmMwZjhmZTQyODYyMjdmZGE2YTE3MmMxYmUwZDczYTc0ZjQxOGQxZmE5ZDk4YjQ1ZGU0ZDZlYzIifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1475-L1501",
+          "version": "repo-lines-v1:sha256:9c4131c92555944ca1e023375a323dae7eecb8f25880da3eaad2d7d88a6ef1e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwMTJmZTA1ZDBlNjQ2Nzk2NzE4MjFmYTk3NDMzZTlhMjIyZDZmYzBkNmE5YTRkMDY2MTc2OThiYmM1OTNlMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2NjUzYjM0YTEyNWEyZmVmYjk1NzUxYmU1MWQ2M2YwN2VkZWFiNjkwZGQ3MTc0ODMwMzY3Y2UxN2I5Y2Q3YzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI2ZGJmMmM3NGMzMDM4N2ZiNjYyZWEzZjdkMTMyY2NkM2ExMzYxNGJmODBhMmVlZTdhYjYyZGY3OWZiNzBlNWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyYTcxYzA3ZDA3NTg1ZGRhM2RjMWNiYTJlZjhhNzFiOGVmNmM4MTg2YTFiYzI3OWIzMTExNGVlNGVkZjNmMWQifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L493-L516",
+          "version": "repo-lines-v1:sha256:f9a1ae6888c32f172c3ab1ab23ef6be5b2842b3f27ef20bc3ecab6f1767f5587:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzZDczMWUzNjk1NjQ0OTg5Y2UwMThiNWMzMzg1MTZiZjIwZDQ5N2I1Yjg3ZWY2MTFjM2M0YTE4MGU2NThlM2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYzOGY5MjEwNDE1MjdkN2M5M2FhYzJhODhkZTczMWM3NWI2ODZjYzYxMjZmZDliZDViMzFlZGZjMjNjODllMTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4MDkxZDU2NTE2YTgzYjllODBmOTdmNjAwNDE0ODY5ZjRmMmZlODVhMDc5OGM3NTYzZTc3NjA0NjBiMTczNjEifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L972-L983",
+          "version": "repo-lines-v1:sha256:1ee4be6464c9bacc4ec4a00f4840c22215a9edd1d3704d7d06ad4435fd247847:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzYWI4NjYzNjE5ZDM1YjdjYTkwOWNiZjRkOTE4M2M5Yjk3NWMyYzc3ZmU2NmE3MzMxNWRlOWQ3Mjc2MGZlNzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlODgxYjI2NTVmOWRkMWNkYmU1N2M3NmE3OWE2NmI5MDQyYjY3ZTY0ZTVkOWFhNDcxYzU5YTQwYmRlNDNhNzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjOGQyZmE5MmYxZWU2ZjRmODIxMGU2ZDFkZjMxNDlmNGExZTZhN2IwZDk0NDUyMDFmMmMyZjhiZDBjNjljNzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExODY2MzFmZjgxMjk3NmZjNDA3MTdiMWFmZTBlYmFjNTA5MTNhNGFlMTI2M2YzM2MwNjc1ZjUxYmQ0OTBjYTEifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/subagent.py#L120-L140",
+          "version": "repo-lines-v1:sha256:0adb5ccc78a1edd240b33176578f89f86afd35d8635a29b214a2deaad514af98:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzNjMzOTZmYjVhMzcwMGU5Y2ZiZDY2MTA1Yzg4MzE0MGEzYzBlMDhjMWU2ZmU1MWU0YjAyNzc4MTg0OTlmYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmZmE5NmUzM2MyZjc0MWU2ZWUyODFjMjhlNDBhNzJmZjczMGYxNmFmYWZjOThlOThmNGZhNWJkZDY2OWM5OWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1NzhhYjgxNGU2ZTU2ZjJkNmI0NDZiZjdiNzhhMWVkMjExY2Y5MmM5ZDcyZjVmODVjNzJiNjRmM2U5MzUxMjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0Y2ZjMmVkNDNkYjBmNDI1ZWYwODYxODBlZGFjNmY0N2JiZGE2NmJlZmM2YWRmZGIyMmRmMDVjMTNkNzAyODYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0e8064622a094b3b8a33b1d11a0fb357",
+      "statement": "Goal pursuit repeatedly evaluates the latest assistant transcript with a separate backend query and treats evaluator errors as not met; interval and dynamic loops are session-only drivers, and dynamic mode scopes schedule_wakeup to the loop and removes it in finally.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L618-L705",
+          "version": "repo-lines-v1:sha256:b102bce38f4b9b6c2c5e898b5d06c9ee30224a2fb04d25e73bcfc9bf6b185151:eyJzZWxlY3RlZExpbmVDb3VudCI6ODgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxNjdhYzI3MTExNDliNDI3YzcwNzJjMDliMmY1ZTQyNDllNjRkNTE5MzA0Njg3NTFjYTMzNTZmYWY2MmQ2MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYjlmYjA0NDY1NDcxZDZhYzg4ZTg0MzljZTVjOGVlODc4MjEzOTcyNGUzMzA2YWMzM2Y2YjA1MDc4MGNjMjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI3Yjg5MjhlNjhmYWQyZTllMWZhZTZhNjRjNWEwYTQ1NDRiYjY4MWRhZjQ0ZmQ5NTZkZjZhMjdlY2IwMzgyZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzYzZjNWEwMjY4NzRkODg0YzkzMzhmYjE5ZjFjODlmMjdhYTYzMzgyNmZiNjBkOWQwOTBkY2ZhMjlmMDg1ZjYifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L752-L885",
+          "version": "repo-lines-v1:sha256:1893baab5c4f9cc244da97d267b136b32165a83e90fcfc33bcdd874b97b13f35:eyJzZWxlY3RlZExpbmVDb3VudCI6MTM0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwZDQ0NDViN2Q4MWRjNDcwZDUxOTM3NDFlMzUxOGU3YTAwZmIwNzI5YzRhNzgyZTMwZmY3Y2NhMjhiNmVjZTk1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhM2U2N2Y3NmEyMjg3YmI2YjZhZGIwMTUwNTVkZmYwODljMDY2OGZhZTJhNWNmYzk4ZmNiZmEyM2VmMmI0MjgwIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmOTFiZDgxNjQ2OThhMDc4ZTcxMmYxODgzOTExZDBhODgyZWQ5NjY3ZTNjZjFhMjgxZTgwOTY1OGRlZjhmZjQyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2NTA0ZjA5NGRlMjUwMTFjMTA2MWY5YzI4MmZkYWZiYzhlMjlmMDI4YmJiNDQ0YWVkYmNmMzM2NGI1ZGY0YjFmIn0"
+        },
+        {
+          "resource": "repo://python/mini_claude/autonomy.py#L78-L112",
+          "version": "repo-lines-v1:sha256:1d8eba47330fff189393222059a3e7e09ea31b505cf11cf9605ad9ee27016d42:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzMmRkNTYzNjQwNDE2MmY0NTUwOTYxNWY5Y2VlYzE5MjkwMGVkY2RjYTc4N2M5NzJkMmI0MTIzMTAyYjIxNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjMjVkN2I1ZWQ4YTk5MWYzOTRmNTc5NDZhODliZWM5NDU4YTUwNzk2MGRhZTYxYjE0NjI3ZjQyNTkxMjVjMDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVhMGVhMTQ3ZjY4MTRlMzVjZjZhOWM0YjFjZDBmOTQ3YjM0ZjdjNWQwYmE3ZDk1MzkzNWY4NDcwMTU5NGI3ZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5NjIyN2VlYjZlZmJiMDI1YzgwMTZiMWRlM2VkNWI5YmI0NjQ2ODY4NjVjYTJlNWEwNjY0NWRiNWY2N2RkZDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4767252bcc004e439e01ebafdbfb5282",
+      "statement": "After each main-agent chat, session persistence records metadata and only the active provider-native history; resume restores saved histories, while context management combines model summarization, tool-result budgeting/snipping, and idle clearing to control prompt growth.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1080-L1200",
+          "version": "repo-lines-v1:sha256:bd5b3f65d097bc19cf6d3025f90be7aa9fd0ac115f0609a1ba949fe598d54284:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyMjA1NTJkMmM0NTcyMjVmMjViYjIwZDljZGQzNTg5YTE3ZThmM2M4NjU4MTI5MzNiNGUwMmJiNDU5M2VlM2JkIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3ZWI3MDI1NzU5M2RhMDZmNjgyYTNkZGRhNTRhOWQyNjBkNGZjNTE0ZjY0NTIzN2Y1Y2E3NGIwOGY4ZGE2MWE2IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwYTY3OWZlZjk2YzUyOTZlZjA1MDhkM2I2NTIwOWRiODBlYWM2ZTE4YTViYTg5YWIyMWJkNGFiZTUzMmY5N2U2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0NzNhNDg3YWY0ZDQ1ZGUxNWQ5ZGNlZDcwZWU2NjEzYjFmZDRmNGIyMDdhZDViNDI1N2E1NDdjYTkwNDc3NDYwIn0"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L987-L1078",
+          "version": "repo-lines-v1:sha256:398ca9e3fd44d1b003796014b3cc576d26c37c949b77019d4e4ee1b42bcd387d:eyJzZWxlY3RlZExpbmVDb3VudCI6OTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjZDdlMDgyYzllZTExMWQ5NjlmZTFkODk3NzY0ZWQ0N2U3ZWQxMGZiM2QzOTZhNjFmMzY5ZGRmODNmNDM0YzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3OTQxZTNjMDhlOWJhYjFmNjgxYWFkMzJhYTdjYzJlZDFlNjIxZWY2OTY5ZjQyMDExMmU1OGY5NzZlOGJkNGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExODY2MzFmZjgxMjk3NmZjNDA3MTdiMWFmZTBlYmFjNTA5MTNhNGFlMTI2M2YzM2MwNjc1ZjUxYmQ0OTBjYTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlMGE2MDEwZDg5NjUzNDZkYWY4MjVmMjU0MzZlNTY4MjM2MzhhMjAxMTVkMGUwZTNiODczMzk1Y2ExYjM3YjYifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/session.py#L9-L49",
+          "version": "repo-lines-v1:sha256:9308b91d7dd26df22979a54dece1f9e276c7d647a0e47bc4de1e0df0aa6ee21f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2MDk0YTVkMjQ0MGY4OTUyYjc1NjQ3MzZhZGU2MTRmODRjN2E1ZTRhNDAzN2ZiYmU3MWIwM2JjZGYyYmM5NTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZDZhMjk0YTE3Y2ZmZmFlOWIzYTgwODg4ZWNjYzNkOTFlMjY0NGI0N2EyMTBjZDQyOTA4YjhjZTE5MGIzMjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwMmZlYTZkY2ZmOGE3YThmZjBmMGI3MTMxNTNkOTYxMTcxMTczOGUwYTliYjUzODUzYzY5MjA5NDRkZTI3NWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2ccc93c2efb54845aba5b3e1b08fc3c9",
+      "statement": "Retryable provider failures are recognized from overload/reset/timeout text or 429, 503, and 529 status codes and retried up to three times with exponential backoff.",
+      "evidence": [
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1754-L1828",
+          "version": "repo-lines-v1:sha256:1492bfde5e976e37899ed97ee17d013be9777a89cf888137af0b467f389411ab:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNDVlODNjZDdjYjM5NDY2MmVmNDFmYTcyNGI0NWQyNjZiNWFlZDg5YTA1YWViNTMzNmJiMzA3YjkyNzI4OWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5ZTM3YjA1ZGQyNDMyYjc4Y2RlMzk2ZmVhZGU3NTFiZjcwMWE2MzFjMjQ5MjBhYjdmMmM3ZDA2ZWE3MGU0ZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NzBhYThmYWJkMGUwNGFmZTAzYWE4YmY1ZDExNzI0YWNhYWZmNzA4ZWMzMWM3Y2YwZTEwNDE4MjA5MTA1MzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyNWQ2ZjgwNzkyZmE3NjI0ZDUwNGMzMjUyM2RlNGE0YzhmN2NmZDEwMjNhNmRmMDc3NDMxZjYxZjI4NWEwM2EifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L1998-L2071",
+          "version": "repo-lines-v1:sha256:4e631cf4e31da66bb388db5be7bb573a68a16f412f31324d891eb8d30cc682fb:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiY2UwODE5MmFhMTIyMDI5ZTEyMTgzNjg2ZGYwYmM1Mjk4Njc4N2FjZGFiYTRiNzAwMzIzZWNkYjUwMDkzM2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5ZTM3YjA1ZGQyNDMyYjc4Y2RlMzk2ZmVhZGU3NTFiZjcwMWE2MzFjMjQ5MjBhYjdmMmM3ZDA2ZWE3MGU0ZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhMDU2Zjk1YTk5MjVhOTg0ZmI5MWMyZmY3NzJiMmNmODI1MTc3YWJiMTM0ODQzMTI3MDdhNjJkMjI0M2M4ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlYmZkZDhmMjUxNjFjZTdiYWNiMGE1OGEzODI2ZDRkMjlkNGQzMTY5NmJkMjA5Y2JhYjBjNTQzN2Y2MGJjNzEifQ"
+        },
+        {
+          "resource": "repo://python/mini_claude/agent.py#L80-L101",
+          "version": "repo-lines-v1:sha256:9a530281126530e0ead8cdbbc67eff272a7bbc26fad6350c3ed1adc6cb41c583:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzZDBhMTM0N2JjNzEzNDI5ODljNGU3M2NkMjZjNjI1Yzc2NWFjZjcwNTcyY2M1ZTljMmM3YWVmNDVkMmEyNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmYWU0MzQ4YjQzZmQxYThhYTgxOTE3Nzg4MmQ0OTQ4YWYxZWJlMmM0NDRhODk3YmVmM2FiMGQyYmI1MWZhZGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFmMjI3NjdlYzg3NDFiODZiMjc5YzQ5MmIzZTE4YzU3M2MyM2UxMzFiOGEyYTYwNWI1NzRjNDY4YTMwZTAxYWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIyOGM0YjU4MTc2Yzg3ZWVmNmIwZDU5Njc4MmY5Y2RkZDI3YzhmMmIzNjhlYWZlMTViZDNlNjA2MDc5YjY4MGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_54c8b83b3c9e45c1909ee6ae6b59f1ed",
+      "statement": "Focused tests cover pure autonomy parsing and normalization, two-stage Auto Mode classifier control flow, and isolated background-skill-review snapshots plus subagent history copying.",
+      "evidence": [
+        {
+          "resource": "repo://python/tests/test_autonomy.py#L1-L65",
+          "version": "repo-lines-v1:sha256:ca5840427b7233a54bd0f2fd90319c006be698879c48a229f8e18595b02eddf8:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlNTZlZTQwMjNhNDIxNWViNzVkMDU2NGQ3Yjc0ZGEzNTdlYjEwZTIxMDJjZDQ0NzJjY2E5M2Y0OTBlZmM4NDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyNjBlZDU3MjQ3MzE1ZDlmYjg0MzRlYjkxMTE5YTFjYTUwMDVlYTdhMzU3ZDMwYTg2MzgwNDE2NWNkM2FmMTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://python/tests/test_autonomy_flow.py#L1-L84",
+          "version": "repo-lines-v1:sha256:faa376fcd7823481cfe61283265b3ceb49cfd16acf76bb4c85306c2e072a58a6:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5YzRmMTQ2YThkOTI3MmJhYjNiMWE0MzEyOWUyMjFiYjUyYWRhYjg3YWMyYjZlNzVlZDYxYzQ0OWQ5NWY2NmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyNjBlZDU3MjQ3MzE1ZDlmYjg0MzRlYjkxMTE5YTFjYTUwMDVlYTdhMzU3ZDMwYTg2MzgwNDE2NWNkM2FmMTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://python/tests/test_skill_agent.py#L23-L105",
+          "version": "repo-lines-v1:sha256:5993afe55ac7ce647ef181181e84dd8bf66d5a6f921c7a0116d77034596b665e:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5NTNhZGEwYTdhN2FmZmM3YjdiNDRkZTlhNmM5ZjE3Y2JkODFlY2ZhYjc2NzBhZjNiMTBhNTdkYmMyNzEzZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ODZmZjVjZjkzNjNiNDQyOTMzNjgwM2IyYzk2MGU3M2RhOGM0N2ZhMGM2ZjY3NjU4ZDE0YjMyM2NkMjJkMzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2ZTE4NDA3MjQ1ZTZmMWQ4OTc4OGM2ZWU4MWU2MDU0YzBiODhjNzYwMTBlNGEwMDlhYmZhM2NjOTY4NDRmY2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3YjkyMjQ0Yzg2YjQ4Y2FkZjIzNTk5MzJhNDUwM2M0MDNkNjZjMDNlZGI3OWIyNzVjOGJjZmIxNTJhNGM4MGIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.0",
+    "at": "2026-08-26T08:40:11.825Z"
+  }
+}

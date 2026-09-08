@@ -5,7 +5,7 @@ dist-test/
 __pycache__/
 steps/dist/
 
-# mini-claude demo artifacts (sessions/memory/skills the steps demos create)
+# mini-claude runtime artifacts
 .mini-session.json
 .mini-memory/
 .mini-skills/
@@ -15,3 +15,9 @@ steps/dist/
 code-review-graph/
 hermes-agent/
 learn-hermes-agent/
+
+
+# Python build and test artifacts
+*.egg-info/
+.ruff_cache/
+python/.ruff_cache/

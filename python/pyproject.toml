@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "claude-code-from-scratch"
 version = "1.0.0"
-description = "A minimal coding agent inspired by Claude Code, built from scratch in Python"
+description = "A Python CLI coding agent with tools, skills, MCP, memory, and code graph search"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -25,3 +25,4 @@ include = ["mini_claude*"]
 
 [tool.setuptools.package-data]
 mini_claude = ["system_prompt.md"]
+

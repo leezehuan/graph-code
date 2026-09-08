@@ -27,6 +27,7 @@ mini_claude/ui.py
 tests/test_autonomy.py
 tests/test_autonomy_flow.py
 tests/test_code_graph_tool.py
+tests/test_code_search_benchmark.py
 tests/test_skill_agent.py
 tests/test_skill_review.py
 tests/test_skill_tools.py

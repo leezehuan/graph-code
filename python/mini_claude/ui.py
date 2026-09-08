@@ -14,7 +14,7 @@ console = Console(highlight=False)
 
 
 def print_welcome() -> None:
-    console.print("\n  [bold cyan]Mini Claude Code[/bold cyan][dim] — A minimal coding agent[/dim]\n")
+    console.print("\n  [bold cyan]Mini Claude Code[/bold cyan][dim] — Python coding agent[/dim]\n")
     console.print("[dim]  Type your request, or 'exit' to quit.[/dim]")
     console.print("[dim]  Commands: /clear /plan /cost /compact /memory /skills[/dim]\n")
 
@@ -218,3 +218,4 @@ def _get_tool_summary(name: str, inp: dict) -> str:
     if name == "agent":
         return f'[{inp.get("type", "general")}] {inp.get("description", "")}'
     return ""
+

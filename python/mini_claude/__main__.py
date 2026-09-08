@@ -19,7 +19,7 @@ from ._dotenv import load_dotenv
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="mini-claude",
-        description="Mini Claude Code — a minimal coding agent",
+        description="Mini Claude Code — a Python coding agent",
         add_help=False,
     )
     parser.add_argument("prompt", nargs="*", help="One-shot prompt")
@@ -370,3 +370,4 @@ Examples:
 
 if __name__ == "__main__":
     main()
+

@@ -1,3 +1,4 @@
-"""Mini Claude Code — a minimal coding agent built from scratch."""
+"""Mini Claude Code Python package."""
 
 __version__ = "1.0.0"
+
