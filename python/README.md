@@ -1,6 +1,6 @@
-# Mini Claude Code Python
+# graph-code Python
 
-Mini Claude Code 的 Python 实现，要求 Python 3.11 或更高版本。
+graph-code 的 Python 实现，要求 Python 3.11 或更高版本。
 
 ## 安装
 
@@ -26,14 +26,14 @@ ANTHROPIC_API_KEY=sk-ant-...
 ## 使用
 
 ```bash
-mini-claude-py "检查当前项目"
-mini-claude-py                     # 交互式 REPL
-mini-claude-py --resume            # 恢复最近会话
-mini-claude-py --yolo "列出文件"
-mini-claude-py --plan "设计重构方案"
-mini-claude-py --accept-edits "整理代码格式"
-mini-claude-py --dont-ask "运行检查"
-mini-claude-py --max-cost 0.50 --max-turns 20 "完成任务"
+graph-code "检查当前项目"
+graph-code                     # 交互式 REPL
+graph-code --resume            # 恢复最近会话
+graph-code --yolo "列出文件"
+graph-code --plan "设计重构方案"
+graph-code --accept-edits "整理代码格式"
+graph-code --dont-ask "运行检查"
+graph-code --max-cost 0.50 --max-turns 20 "完成任务"
 python -m mini_claude "完成任务"
 ```
 

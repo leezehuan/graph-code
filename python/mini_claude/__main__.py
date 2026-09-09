@@ -18,8 +18,8 @@ from ._dotenv import load_dotenv
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="mini-claude",
-        description="Mini Claude Code — a Python coding agent",
+        prog="graph-code",
+        description="graph-code — a Python coding agent",
         add_help=False,
     )
     parser.add_argument("prompt", nargs="*", help="One-shot prompt")
@@ -235,7 +235,7 @@ def main() -> None:
 
     if args.help:
         print("""
-Usage: mini-claude [options] [prompt]
+Usage: graph-code [options] [prompt]
 
 Options:
   --yolo, -y          Skip all confirmation prompts (bypassPermissions mode)
@@ -265,13 +265,13 @@ REPL commands:
   /<skill-name>       Invoke a skill (e.g. /commit "fix types")
 
 Examples:
-  mini-claude "fix the bug in src/app.ts"
-  mini-claude --yolo "run all tests and fix failures"
-  mini-claude --plan "how would you refactor this?"
-  mini-claude --max-cost 0.50 --max-turns 20 "implement feature X"
-  OPENAI_API_KEY=sk-xxx mini-claude --api-base https://aihubmix.com/v1 --model gpt-4o "hello"
-  mini-claude --resume
-  mini-claude  # starts interactive REPL
+  graph-code "fix the bug in src/app.ts"
+  graph-code --yolo "run all tests and fix failures"
+  graph-code --plan "how would you refactor this?"
+  graph-code --max-cost 0.50 --max-turns 20 "implement feature X"
+  OPENAI_API_KEY=sk-xxx graph-code --api-base https://aihubmix.com/v1 --model gpt-4o "hello"
+  graph-code --resume
+  graph-code  # starts interactive REPL
 """)
         sys.exit(0)
 

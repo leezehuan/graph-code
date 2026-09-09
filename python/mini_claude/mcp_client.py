@@ -95,7 +95,7 @@ class McpConnection:
         await self._send_request("initialize", {
             "protocolVersion": "2024-11-05",
             "capabilities": {},
-            "clientInfo": {"name": "mini-claude", "version": "1.0.0"},
+            "clientInfo": {"name": "graph-code", "version": "1.0.0"},
         })
         self._send_notification("notifications/initialized")
 

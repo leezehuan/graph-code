@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mini-claude"
+name = "graph-code"
 version = "1.0.0"
 description = "A Python CLI coding agent with tools, skills, MCP, memory, and code graph search"
 readme = "README.md"
@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mini-claude-py = "mini_claude.__main__:main"
+graph-code = "mini_claude.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["mini_claude*"]

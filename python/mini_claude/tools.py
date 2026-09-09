@@ -552,7 +552,7 @@ def _web_fetch(inp: dict) -> str:
     # rejects non-http schemes).
     if not url.lower().startswith(("http://", "https://")):
         return "Error: only http(s) URLs are supported"
-    req = urllib.request.Request(url, headers={"User-Agent": "mini-claude/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "graph-code/1.0"})
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             content_type = resp.headers.get("Content-Type", "")
