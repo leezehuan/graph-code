@@ -72,7 +72,6 @@ pyzmq==27.2.0
 regex==2026.8.31
 requests==2.34.2
 requests-toolbelt==1.0.0
-rocketmq @ file:///tmp/rocketmq-inspect/rocketmq-0.4.4-py2.py3-none-manylinux1_x86_64.whl#sha256=19a10219f5074d1050e88cdbdfed3903a374b3f83c0dd2c8773e1e93e33ad02d
 rocketmq-python-client==5.1.1
 setuptools==83.0.0
 simple-websocket==1.1.0

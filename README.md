@@ -57,18 +57,14 @@ so committed state changes are eventually published while the lead is offline.
 - system prompt: real-time assembly by the middleware sequence
 - skill-loading：hot-pluggable, requiring no restart
 - error recovery
-
-## in_progress
-
 - subagent
 - task system
 - background tasks
 - agent teams
+- autonomous agent
 
-## pending
-
+## in_progress
 - cron scheduler
-- team protocols
-- autonomous agents
 - worktree isolation
 - mcp plugin
+
