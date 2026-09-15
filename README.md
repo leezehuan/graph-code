@@ -1,4 +1,4 @@
-# LangCode - LangChain based Claude Code like coding agent
+# LangCode - LangChain-based Agent Infrastructure for Task Decomposition and Parallel Execution
 
 ## Local dependencies
 
