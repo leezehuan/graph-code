@@ -217,6 +217,7 @@ CREATE TABLE IF NOT EXISTS message_outbox (
     topic TEXT NOT NULL,
     tag TEXT NOT NULL,
     message_key TEXT,
+    lite_topic TEXT,
     envelope JSONB NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'published', 'failed')),
@@ -226,6 +227,8 @@ CREATE TABLE IF NOT EXISTS message_outbox (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     published_at TIMESTAMPTZ
 );
+
+ALTER TABLE message_outbox ADD COLUMN IF NOT EXISTS lite_topic TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_message_outbox_pending
     ON message_outbox (next_retry_at, created_at)

@@ -10,6 +10,7 @@ from lib.message_hub import (
     AGENT_MESSAGE_TOPIC,
     InMemoryMessageBus,
     build_envelope,
+    configured_task_ready_lite_topics,
     route_envelope,
 )
 
@@ -25,7 +26,7 @@ def test_execution_context_must_be_complete() -> None:
         )
 
 
-def test_task_available_uses_agent_command_topic_and_task_key() -> None:
+def test_task_available_uses_ready_lite_topic_and_task_key() -> None:
     envelope = build_envelope(
         sender="scheduler",
         target=None,
@@ -35,11 +36,28 @@ def test_task_available_uses_agent_command_topic_and_task_key() -> None:
         task_id="task-1",
     )
 
-    topic, tag, key = route_envelope(envelope)
+    topic, tag, key, lite_topic = route_envelope(envelope)
 
     assert topic == AGENT_COMMAND_TOPIC
     assert tag == "task_available"
     assert key == "task-1"
+    assert lite_topic == "ready.code.implementation.s4"
+
+
+def test_directed_control_uses_runtime_lite_topic() -> None:
+    envelope = build_envelope(
+        sender="lead",
+        target="runtime-1",
+        event_type="execution_cancel",
+        payload={"reason": "cancel"},
+    )
+
+    topic, tag, key, lite_topic = route_envelope(envelope)
+
+    assert topic == AGENT_COMMAND_TOPIC
+    assert tag == "execution_cancel"
+    assert key == "runtime-1"
+    assert lite_topic == "runtime.runtime-1"
 
 
 def test_normal_message_uses_agent_message_topic() -> None:
@@ -50,11 +68,12 @@ def test_normal_message_uses_agent_message_topic() -> None:
         payload={"text": "status"},
     )
 
-    topic, tag, key = route_envelope(envelope)
+    topic, tag, key, lite_topic = route_envelope(envelope)
 
     assert topic == AGENT_MESSAGE_TOPIC
     assert tag == "message"
     assert key == "runtime-1"
+    assert lite_topic is None
 
 
 def test_in_memory_bus_retries_then_acks_once() -> None:
@@ -89,3 +108,17 @@ def test_task_shards_are_stable_and_bounded() -> None:
 
     assert first == second
     assert 0 <= first < 64
+
+
+def test_configured_ready_lite_topics_cover_each_configured_shard(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TASK_WORK_TASK_TYPES", "code.review, code.implementation")
+    monkeypatch.setenv("TASK_WORK_SHARD_COUNT", "2")
+
+    assert configured_task_ready_lite_topics() == (
+        "ready.code.review.s0",
+        "ready.code.review.s1",
+        "ready.code.implementation.s0",
+        "ready.code.implementation.s1",
+    )

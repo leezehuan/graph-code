@@ -11,6 +11,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import threading
 from collections import deque
 from dataclasses import dataclass
@@ -26,6 +27,61 @@ AGENT_COMMAND_TOPIC = "agent-command"
 TASK_EVENT_TOPIC = "task-event"
 PERMISSION_EVENT_TOPIC = "permission-event"
 AGENT_MESSAGE_TOPIC = "agent-message"
+TASK_READY_LITE_TOPIC_PREFIX = "ready"
+RUNTIME_CONTROL_LITE_TOPIC_PREFIX = "runtime"
+_V5_IMPORT_LOCK = threading.Lock()
+
+
+def _v5_client_types() -> tuple[Any, Any, Any, Any, Any, Any]:
+    """Load the V5 SDK lazily so outbox-only processes need no MQ client."""
+    # Version 5.1.1 configures a file logger at import time under
+    # ~/logs/rocketmq_python. Redirect only that import to a configurable,
+    # writable root, then restore HOME before application code runs.
+    with _V5_IMPORT_LOCK:
+        original_home = os.environ.get("HOME")
+        log_home = os.getenv(
+            "ROCKETMQ_CLIENT_HOME",
+            "/tmp/langcode-rocketmq-client",
+        )
+        if "rocketmq.v5.log.log_config" not in sys.modules:
+            os.makedirs(log_home, exist_ok=True)
+            os.environ["HOME"] = log_home
+        try:
+            from rocketmq.v5.client import ClientConfiguration, Credentials
+            from rocketmq.v5.consumer import SimpleConsumer
+            from rocketmq.v5.model import FilterExpression, Message
+            from rocketmq.v5.producer import Producer
+        finally:
+            if original_home is None:
+                os.environ.pop("HOME", None)
+            else:
+                os.environ["HOME"] = original_home
+
+    return (
+        ClientConfiguration,
+        Credentials,
+        FilterExpression,
+        SimpleConsumer,
+        Producer,
+        Message,
+    )
+
+
+def configured_task_ready_lite_topics() -> tuple[str, ...]:
+    """Return the configured task-ready LiteTopics for a generic Runtime."""
+    task_types = tuple(
+        task_type.strip()
+        for task_type in os.getenv("TASK_WORK_TASK_TYPES", "general").split(",")
+        if task_type.strip()
+    )
+    shard_count = int(os.getenv("TASK_WORK_SHARD_COUNT", "64"))
+    if shard_count < 1:
+        raise ValueError("TASK_WORK_SHARD_COUNT must be >= 1")
+    return tuple(
+        task_ready_lite_topic(task_type, shard)
+        for task_type in task_types
+        for shard in range(shard_count)
+    )
 
 
 @dataclass(frozen=True)
@@ -162,19 +218,48 @@ def build_envelope(
     )
 
 
-def route_envelope(envelope: MessageEnvelope) -> tuple[str, str, str | None]:
-    """Choose the RocketMQ topic, tag, and ordered message key."""
+def task_ready_lite_topic(task_type: str, work_shard: int) -> str:
+    """Return the stable LiteTopic for one ready-task shard."""
+    if not task_type:
+        raise ValueError("task_available payload.task_type is required")
+    if work_shard < 0:
+        raise ValueError("task_available payload.work_shard must be >= 0")
+    return f"{TASK_READY_LITE_TOPIC_PREFIX}.{task_type}.s{work_shard}"
+
+
+def runtime_control_lite_topic(runtime_id: str) -> str:
+    """Return the directed control LiteTopic for one Runtime."""
+    if not runtime_id:
+        raise ValueError("directed control messages require target runtime_id")
+    return f"{RUNTIME_CONTROL_LITE_TOPIC_PREFIX}.{runtime_id}"
+
+
+def route_envelope(
+    envelope: MessageEnvelope,
+) -> tuple[str, str, str | None, str | None]:
+    """Choose the RocketMQ topic, tag, key, and optional LiteTopic."""
     event_type = envelope.event_type
+    lite_topic: str | None = None
 
     if event_type == "task_available":
         topic = AGENT_COMMAND_TOPIC
         tag = "task_available"
+        try:
+            task_type = str(envelope.payload["task_type"])
+            work_shard = int(envelope.payload["work_shard"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(
+                "task_available requires payload.task_type and payload.work_shard"
+            ) from exc
+        lite_topic = task_ready_lite_topic(task_type, work_shard)
     elif event_type in {"permission_response", "execution_cancel"}:
         topic = AGENT_COMMAND_TOPIC
         tag = event_type
+        lite_topic = runtime_control_lite_topic(envelope.target or "")
     elif event_type == "runtime_wakeup":
         topic = AGENT_COMMAND_TOPIC
         tag = event_type
+        lite_topic = runtime_control_lite_topic(envelope.target or "")
     elif event_type.startswith("permission."):
         topic = PERMISSION_EVENT_TOPIC
         tag = event_type
@@ -185,30 +270,35 @@ def route_envelope(envelope: MessageEnvelope) -> tuple[str, str, str | None]:
         topic = AGENT_MESSAGE_TOPIC
         tag = event_type
 
-    message_key = (
-        envelope.task_id
-        or envelope.execution_id
-        or envelope.request_id
-        or envelope.target
-        or envelope.event_id
-    )
-    return topic, tag, message_key
+    if lite_topic and lite_topic.startswith(f"{RUNTIME_CONTROL_LITE_TOPIC_PREFIX}."):
+        message_key = envelope.target
+    else:
+        message_key = (
+            envelope.task_id
+            or envelope.execution_id
+            or envelope.request_id
+            or envelope.target
+            or envelope.event_id
+        )
+    return topic, tag, message_key, lite_topic
 
 
 async def enqueue_outbox_event(conn: Any, envelope: MessageEnvelope) -> str:
     """Insert a message into ``message_outbox`` inside the caller's transaction."""
-    topic, tag, message_key = route_envelope(envelope)
+    topic, tag, message_key, lite_topic = route_envelope(envelope)
     await conn.execute(
         """
         INSERT INTO message_outbox
-            (event_id, topic, tag, message_key, envelope, status, next_retry_at)
-        VALUES (%s, %s, %s, %s, %s::jsonb, 'pending', NOW())
+            (event_id, topic, tag, message_key, lite_topic, envelope, status,
+             next_retry_at)
+        VALUES (%s, %s, %s, %s, %s, %s::jsonb, 'pending', NOW())
         """,
         [
             envelope.event_id,
             topic,
             tag,
             message_key,
+            lite_topic,
             json.dumps(envelope.as_dict()),
         ],
     )
@@ -432,16 +522,142 @@ class PostgresOutboxMessageBus:
 class _Receipt:
     consumer: str
     envelope: MessageEnvelope
-    decision: threading.Event
-    retry_requested: bool = False
+    broker_message: Any
+    subscription: "_Subscription"
+
+
+@dataclass
+class _Subscription:
+    consumer: str
+    topic: str
+    broker_consumer: Any
+    target: str | None
+    allow_broadcast: bool
+    max_messages: int
+    lite_topics: tuple[str, ...]
+
+
+def _default_lite_topics(
+    *,
+    topic: str,
+    tag_expression: str,
+    target: str | None,
+) -> tuple[str, ...]:
+    if topic != AGENT_COMMAND_TOPIC:
+        return ()
+    if tag_expression == "task_available":
+        return configured_task_ready_lite_topics()
+    if target is not None:
+        return (runtime_control_lite_topic(target),)
+    return ()
+
+
+def _enable_lite_simple_consumer(consumer: Any) -> None:
+    """Enable Lite POP mode missing from the public 5.1.1 Python SDK surface."""
+    from rocketmq.grpc_protocol import ClientType
+
+    # The SDK defines ClientType.LITE_SIMPLE_CONSUMER but does not expose a
+    # matching class. SimpleConsumer otherwise supplies exactly the POP
+    # receive lifecycle we need.
+    consumer._Client__client_type = ClientType.LITE_SIMPLE_CONSUMER
+
+
+def _sync_lite_subscriptions(
+    consumer: Any,
+    lite_topics: tuple[str, ...],
+) -> None:
+    """Bind a Lite POP consumer to its configured LiteTopic collection."""
+    from rocketmq.grpc_protocol import (
+        LiteSubscriptionAction,
+        SyncLiteSubscriptionRequest,
+    )
+    from rocketmq.v5.util import MessagingResultChecker
+
+    request = SyncLiteSubscriptionRequest()
+    request.action = LiteSubscriptionAction.COMPLETE_ADD
+    request.topic.name = AGENT_COMMAND_TOPIC
+    request.topic.resource_namespace = consumer.client_configuration.namespace
+    request.group.name = consumer.consumer_group
+    request.group.resource_namespace = consumer.client_configuration.namespace
+    request.lite_topic_set.extend(lite_topics)
+    response = consumer.rpc_client.sync_lite_subscription_async(
+        consumer.client_configuration.rpc_endpoints,
+        request,
+        metadata=consumer._sign(),
+        timeout=consumer.client_configuration.request_timeout,
+    ).result()
+    MessagingResultChecker.check(response.status)
+
+
+def _ack_broker_message(subscription: _Subscription, message: Any) -> None:
+    if not subscription.lite_topics:
+        subscription.broker_consumer.ack(message)
+        return
+
+    from rocketmq.grpc_protocol import AckMessageEntry, AckMessageRequest
+    from rocketmq.v5.util import MessagingResultChecker
+
+    consumer = subscription.broker_consumer
+    request = AckMessageRequest()
+    request.group.name = consumer.consumer_group
+    request.group.resource_namespace = consumer.client_configuration.namespace
+    request.topic.name = message.topic
+    request.topic.resource_namespace = consumer.client_configuration.namespace
+    entry = AckMessageEntry()
+    entry.message_id = message.message_id
+    entry.receipt_handle = message.receipt_handle
+    entry.lite_topic = message.lite_topic
+    request.entries.append(entry)
+    response = consumer.rpc_client.ack_message_async(
+        message.endpoints,
+        request,
+        metadata=consumer._sign(),
+        timeout=consumer.client_configuration.request_timeout,
+    ).result()
+    MessagingResultChecker.check(response.status)
+
+
+def _change_broker_message_invisible_duration(
+    subscription: _Subscription,
+    message: Any,
+    invisible_duration: int,
+) -> None:
+    if not subscription.lite_topics:
+        subscription.broker_consumer.change_invisible_duration(
+            message,
+            invisible_duration,
+        )
+        return
+
+    from rocketmq.grpc_protocol import ChangeInvisibleDurationRequest
+    from rocketmq.v5.util import MessagingResultChecker
+
+    consumer = subscription.broker_consumer
+    request = ChangeInvisibleDurationRequest()
+    request.group.name = consumer.consumer_group
+    request.group.resource_namespace = consumer.client_configuration.namespace
+    request.topic.name = message.topic
+    request.topic.resource_namespace = consumer.client_configuration.namespace
+    request.receipt_handle = message.receipt_handle
+    request.invisible_duration.seconds = invisible_duration
+    request.message_id = message.message_id
+    request.lite_topic = message.lite_topic
+    response = consumer.rpc_client.change_invisible_duration_async(
+        message.endpoints,
+        request,
+        metadata=consumer._sign(),
+        timeout=consumer.client_configuration.request_timeout,
+    ).result()
+    message.receipt_handle = response.receipt_handle
+    MessagingResultChecker.check(response.status)
 
 
 class RocketMQMessageBus(PostgresOutboxMessageBus):
-    """RocketMQ-backed consumer transport with PostgreSQL Outbox writes.
+    """RocketMQ V5 transport with PostgreSQL Outbox writes and POP receives.
 
-    The Apache Python client is callback-based. The callback waits for the
-    application to call ``ack`` or ``retry``, retaining explicit acknowledgement
-    semantics at the application boundary.
+    ``SimpleConsumer`` uses POP/shared pull. A Runtime fetches work only while
+    idle, so a busy Runtime cannot hold an unclaimed ``task_available`` receipt
+    that another idle Runtime should receive.
     """
 
     def __init__(
@@ -449,12 +665,18 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
         pool: AsyncConnectionPool,
         *,
         nameserver_address: str | None = None,
+        endpoints: str | None = None,
         producer_group: str | None = None,
         receipt_timeout: float = 300,
     ):
         super().__init__(pool)
-        self.nameserver_address = nameserver_address or os.getenv(
-            "ROCKETMQ_NAMESRV_ADDR", "127.0.0.1:9876"
+        # RocketMQ V5 clients talk to the broker proxy's gRPC endpoint, not
+        # the legacy NameServer endpoint. Keep nameserver_address accepted for
+        # API compatibility, but do not use it as a V5 access point.
+        del nameserver_address
+        self.endpoints = endpoints or os.getenv(
+            "ROCKETMQ_ENDPOINTS",
+            os.getenv("ROCKETMQ_PROXY_GRPC_ADDR", "127.0.0.1:8081"),
         )
         self.producer_group = producer_group or os.getenv(
             "ROCKETMQ_PRODUCER_GROUP", "GID-langcode-outbox"
@@ -462,18 +684,22 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
         self.receipt_timeout = receipt_timeout
         self._producer: Any | None = None
         self._producer_lock = asyncio.Lock()
-        self._loop: asyncio.AbstractEventLoop | None = None
-        self._queues: dict[str, asyncio.Queue[_Receipt]] = {}
         self._receipts: dict[str, _Receipt] = {}
-        self._subscriptions: dict[tuple[str, str], Any] = {}
+        self._subscriptions: dict[str, list[_Subscription]] = {}
+        self._subscription_positions: dict[str, int] = {}
 
     async def setup(self) -> None:
-        self._loop = asyncio.get_running_loop()
         await self._ensure_producer()
 
     async def close(self) -> None:
-        consumers = list(self._subscriptions.values())
+        consumers = [
+            subscription.broker_consumer
+            for subscriptions in self._subscriptions.values()
+            for subscription in subscriptions
+        ]
         self._subscriptions.clear()
+        self._subscription_positions.clear()
+        self._receipts.clear()
         for consumer in consumers:
             try:
                 await asyncio.to_thread(consumer.shutdown)
@@ -496,109 +722,152 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
         target: str | None = None,
         allow_broadcast: bool = True,
         group_id: str | None = None,
+        max_messages: int = 16,
+        lite_topics: tuple[str, ...] | None = None,
     ) -> None:
-        """Configure a local RocketMQ consumer and destination filter.
+        """Configure a local V5 POP consumer and destination filter.
 
         ``allow_broadcast`` is appropriate for lifecycle event streams. It is
         disabled for directed Runtime control and normal agent inboxes.
         """
-        if self._loop is None:
-            self._loop = asyncio.get_running_loop()
-        key = (consumer, topic)
-        if key in self._subscriptions:
+        if max_messages < 1:
+            raise ValueError("max_messages must be >= 1")
+        subscriptions = self._subscriptions.setdefault(consumer, [])
+        if any(subscription.topic == topic for subscription in subscriptions):
             return
 
         try:
-            from rocketmq.client import PushConsumer
+            (
+                ClientConfiguration,
+                Credentials,
+                FilterExpression,
+                SimpleConsumer,
+                _,
+                _,
+            ) = _v5_client_types()
         except ImportError as exc:
             raise RuntimeError(
-                "RocketMQ support requires the 'rocketmq' package. "
+                "RocketMQ support requires the 'rocketmq-python-client' package. "
                 "Install requirements.txt before starting a runtime."
             ) from exc
 
-        local_queue = self._queues.setdefault(consumer, asyncio.Queue())
         broker_group = group_id or f"GID-langcode-{_safe_group_component(consumer)}"
-
-        def callback(message: Any) -> Any:
-            try:
-                body = message.body
-                if isinstance(body, bytes):
-                    body = body.decode("utf-8")
-                envelope = MessageEnvelope.from_dict(json.loads(body))
-                if target is not None and envelope.target != target:
-                    if not (allow_broadcast and envelope.target is None):
-                        return None
-                if self._loop is None:
-                    raise RuntimeError("RocketMQ callback has no running event loop")
-
-                receipt = _Receipt(
-                    consumer=consumer,
-                    envelope=envelope,
-                    decision=threading.Event(),
-                )
-                self._receipts[envelope.event_id] = receipt
-                future = asyncio.run_coroutine_threadsafe(
-                    local_queue.put(receipt),
-                    self._loop,
-                )
-                future.result(timeout=5)
-                if not receipt.decision.wait(timeout=self.receipt_timeout):
-                    self._receipts.pop(envelope.event_id, None)
-                    raise TimeoutError(
-                        f"Timed out waiting for acknowledgement of "
-                        f"{envelope.event_id}"
-                    )
-                if receipt.retry_requested:
-                    raise RuntimeError(
-                        f"Application requested retry for {envelope.event_id}"
-                    )
-                return None
-            except Exception:
-                logger.exception(
-                    "RocketMQ callback failed",
-                    extra={"consumer": consumer, "topic": topic},
-                )
-                # The installed push-client treats callback exceptions as
-                # RECONSUME_LATER, which provides at-least-once delivery.
-                raise
-
-        mq_consumer = PushConsumer(broker_group)
-        mq_consumer.set_namesrv_addr(self.nameserver_address)
-        mq_consumer.set_instance_name(f"{consumer}-{uuid4().hex[:8]}")
-        mq_consumer.subscribe(topic, callback, tag_expression)
-        await asyncio.to_thread(mq_consumer.start)
-        self._subscriptions[key] = mq_consumer
+        configuration = ClientConfiguration(
+            self.endpoints,
+            Credentials(
+                os.getenv("ROCKETMQ_ACCESS_KEY", ""),
+                os.getenv("ROCKETMQ_SECRET_KEY", ""),
+            ),
+            request_timeout=int(os.getenv("ROCKETMQ_REQUEST_TIMEOUT", "3")),
+        )
+        mq_consumer = SimpleConsumer(
+            configuration,
+            broker_group,
+            {topic: FilterExpression(tag_expression)},
+        await_duration=max(
+            1,
+            int(os.getenv("ROCKETMQ_POP_POLL_SECONDS", "1")),
+        ),
+        )
+        resolved_lite_topics = lite_topics or _default_lite_topics(
+            topic=topic,
+            tag_expression=tag_expression,
+            target=target,
+        )
+        if resolved_lite_topics:
+            _enable_lite_simple_consumer(mq_consumer)
+        await asyncio.to_thread(mq_consumer.startup)
+        if resolved_lite_topics:
+            await asyncio.to_thread(
+                _sync_lite_subscriptions,
+                mq_consumer,
+                resolved_lite_topics,
+            )
+        subscriptions.append(
+            _Subscription(
+                consumer=consumer,
+                topic=topic,
+                broker_consumer=mq_consumer,
+                target=target,
+                allow_broadcast=allow_broadcast,
+                max_messages=max_messages,
+                lite_topics=resolved_lite_topics,
+            )
+        )
 
     async def receive(
         self,
         consumer: str,
         timeout: float = 5,
     ) -> list[MessageEnvelope]:
-        queue = self._queues.get(consumer)
-        if queue is None:
+        subscriptions = self._subscriptions.get(consumer)
+        if not subscriptions:
             raise RuntimeError(
                 f"Consumer '{consumer}' is not subscribed. Call subscribe() first."
             )
 
-        receipts: list[_Receipt] = []
-        try:
-            receipts.append(await asyncio.wait_for(queue.get(), timeout=timeout))
-        except asyncio.TimeoutError:
-            return []
-
+        deadline = asyncio.get_running_loop().time() + max(0, timeout)
         while True:
-            try:
-                receipts.append(queue.get_nowait())
-            except asyncio.QueueEmpty:
-                break
+            position = self._subscription_positions.get(consumer, 0)
+            subscription = subscriptions[position % len(subscriptions)]
+            self._subscription_positions[consumer] = (position + 1) % len(
+                subscriptions
+            )
+            messages = await asyncio.to_thread(
+                subscription.broker_consumer.receive,
+                subscription.max_messages,
+                max(1, int(self.receipt_timeout)),
+            )
+            envelopes: list[MessageEnvelope] = []
+            for broker_message in messages:
+                try:
+                    body = broker_message.body
+                    if isinstance(body, bytes):
+                        body = body.decode("utf-8")
+                    envelope = MessageEnvelope.from_dict(json.loads(body))
+                except Exception:
+                    logger.exception(
+                        "Discarding malformed RocketMQ message",
+                        extra={"consumer": consumer, "topic": subscription.topic},
+                    )
+                    await asyncio.to_thread(
+                        _ack_broker_message,
+                        subscription,
+                        broker_message,
+                    )
+                    continue
 
-        envelopes: list[MessageEnvelope] = []
-        for receipt in receipts:
-            if await self._claim_delivery(receipt.consumer, receipt.envelope.event_id):
-                envelopes.append(receipt.envelope)
-            else:
-                self._resolve_receipt(receipt.envelope.event_id, retry=False)
-        return envelopes
+                if (
+                    subscription.target is not None
+                    and envelope.target != subscription.target
+                ):
+                    if not (
+                        subscription.allow_broadcast and envelope.target is None
+                    ):
+                        await asyncio.to_thread(
+                            _ack_broker_message,
+                            subscription,
+                            broker_message,
+                        )
+                        continue
+
+                receipt = _Receipt(
+                    consumer=consumer,
+                    envelope=envelope,
+                    broker_message=broker_message,
+                    subscription=subscription,
+                )
+                if await self._claim_delivery(consumer, envelope.event_id):
+                    self._receipts[envelope.event_id] = receipt
+                    envelopes.append(envelope)
+                else:
+                    await asyncio.to_thread(
+                        _ack_broker_message,
+                        subscription,
+                        broker_message,
+                    )
+            if envelopes or asyncio.get_running_loop().time() >= deadline:
+                return envelopes
 
     async def ack(self, event_id: str) -> None:
         receipt = self._get_receipt(event_id)
@@ -620,7 +889,12 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
                     """,
                     [event_id, receipt.consumer],
                 )
-        self._resolve_receipt(event_id, retry=False)
+        await asyncio.to_thread(
+            _ack_broker_message,
+            receipt.subscription,
+            receipt.broker_message,
+        )
+        self._receipts.pop(event_id, None)
 
     async def retry(self, event_id: str, reason: str) -> None:
         receipt = self._get_receipt(event_id)
@@ -642,7 +916,17 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
                     """,
                     [event_id, receipt.consumer, reason[:4000]],
                 )
-        self._resolve_receipt(event_id, retry=True)
+        retry_delay = max(
+            1,
+            int(os.getenv("ROCKETMQ_RETRY_INVISIBLE_SECONDS", "1")),
+        )
+        await asyncio.to_thread(
+            _change_broker_message_invisible_duration,
+            receipt.subscription,
+            receipt.broker_message,
+            retry_delay,
+        )
+        self._receipts.pop(event_id, None)
 
     async def publish_outbox_record(
         self,
@@ -650,33 +934,26 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
         topic: str,
         tag: str,
         message_key: str | None,
+        lite_topic: str | None,
         envelope: dict[str, Any],
     ) -> None:
         """Publish one already-committed Outbox record to RocketMQ."""
         await self._ensure_producer()
         try:
-            from rocketmq.client import Message, SendStatus
+            _, _, _, _, _, Message = _v5_client_types()
         except ImportError as exc:
             raise RuntimeError("RocketMQ producer dependency is unavailable") from exc
 
         def publish() -> None:
-            message = Message(topic)
-            message.set_tags(tag)
+            message = Message()
+            message.topic = topic
+            message.tag = tag
             if message_key:
-                message.set_keys(message_key)
-            message.set_body(json.dumps(envelope, ensure_ascii=False))
-            sharding_key = message_key or envelope["event_id"]
-            result = self._producer.send_orderly(
-                message,
-                int.from_bytes(
-                    sharding_key.encode("utf-8"),
-                    "little",
-                    signed=False,
-                )
-                % (2**31 - 1),
-            )
-            if result.status != SendStatus.OK:
-                raise RuntimeError(f"RocketMQ send returned status {result.status!s}")
+                message.keys = message_key
+            if lite_topic:
+                message.lite_topic = lite_topic
+            message.body = json.dumps(envelope, ensure_ascii=False).encode("utf-8")
+            self._producer.send(message)
 
         await asyncio.to_thread(publish)
 
@@ -687,15 +964,37 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
             if self._producer is not None:
                 return
             try:
-                from rocketmq.client import Producer
+                (
+                    ClientConfiguration,
+                    Credentials,
+                    _,
+                    _,
+                    Producer,
+                    _,
+                ) = _v5_client_types()
             except ImportError as exc:
                 raise RuntimeError(
-                    "RocketMQ support requires the 'rocketmq' package. "
+                    "RocketMQ support requires the 'rocketmq-python-client' package. "
                     "Install requirements.txt before starting LangCode."
                 ) from exc
-            producer = Producer(self.producer_group)
-            producer.set_namesrv_addr(self.nameserver_address)
-            await asyncio.to_thread(producer.start)
+            configuration = ClientConfiguration(
+                self.endpoints,
+                Credentials(
+                    os.getenv("ROCKETMQ_ACCESS_KEY", ""),
+                    os.getenv("ROCKETMQ_SECRET_KEY", ""),
+                ),
+                request_timeout=int(os.getenv("ROCKETMQ_REQUEST_TIMEOUT", "3")),
+            )
+            producer = Producer(
+                configuration,
+                topics={
+                    AGENT_COMMAND_TOPIC,
+                    TASK_EVENT_TOPIC,
+                    PERMISSION_EVENT_TOPIC,
+                    AGENT_MESSAGE_TOPIC,
+                },
+            )
+            await asyncio.to_thread(producer.startup)
             self._producer = producer
 
     async def _claim_delivery(self, consumer: str, event_id: str) -> bool:
@@ -728,14 +1027,6 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
             raise KeyError(f"No active receipt for event {event_id}")
         return receipt
 
-    def _resolve_receipt(self, event_id: str, *, retry: bool) -> None:
-        receipt = self._receipts.pop(event_id, None)
-        if receipt is None:
-            return
-        receipt.retry_requested = retry
-        receipt.decision.set()
-
-
 class OutboxDispatcher:
     """Publishes pending PostgreSQL Outbox records with bounded retry backoff."""
 
@@ -763,7 +1054,8 @@ class OutboxDispatcher:
             async with conn.transaction():
                 cursor = await conn.execute(
                     """
-                    SELECT event_id, topic, tag, message_key, envelope, retry_count
+                    SELECT event_id, topic, tag, message_key, lite_topic, envelope,
+                           retry_count
                     FROM message_outbox
                     WHERE status = 'pending'
                       AND (next_retry_at IS NULL OR next_retry_at <= NOW())
@@ -785,6 +1077,7 @@ class OutboxDispatcher:
                             topic=record["topic"],
                             tag=record["tag"],
                             message_key=record["message_key"],
+                            lite_topic=record["lite_topic"],
                             envelope=envelope,
                         )
                         await conn.execute(

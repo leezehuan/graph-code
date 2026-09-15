@@ -19,19 +19,24 @@ export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=postgres
 ```
 
-Redis is exposed on `127.0.0.1:6379`; RocketMQ NameServer and Broker are
-exposed on `127.0.0.1:9876` and `127.0.0.1:10911`, respectively. Override any
-published port or PostgreSQL setting with the corresponding environment
-variable when running `docker compose`.
+Redis is exposed on `127.0.0.1:6379`; RocketMQ NameServer, Broker, and the V5
+gRPC proxy are exposed on `127.0.0.1:9876`, `127.0.0.1:10911`, and
+`127.0.0.1:8081`, respectively. Override any published port or PostgreSQL
+setting with the corresponding environment variable when running `docker
+compose`.
 
 ## Runtime workers
 
 Lead and worker processes use PostgreSQL as the task and audit source of truth,
-with RocketMQ as the asynchronous transport. Set the NameServer address when
-it is not running on the local default:
+with RocketMQ as the asynchronous transport. The V5 Python client connects to
+the proxy gRPC endpoint:
 
 ```bash
-export ROCKETMQ_NAMESRV_ADDR=127.0.0.1:9876
+export ROCKETMQ_ENDPOINTS=127.0.0.1:8081
+# Comma-separated task types installed in the generic Runtime. The default is
+# "general"; the shard count must match the scheduler setting.
+export TASK_WORK_TASK_TYPES=general,code.implementation,code.review
+export TASK_WORK_SHARD_COUNT=64
 python -m worker --runtime-id runtime-001
 ```
 

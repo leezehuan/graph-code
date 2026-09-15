@@ -28,6 +28,7 @@ from lib.message_hub import (
     MessageBus,
     MessageEnvelope,
     RocketMQMessageBus,
+    configured_task_ready_lite_topics,
 )
 from middlewares.context_compression_middleware import ContextCompressionMiddleware
 from middlewares.error_recovery_middleware import ErrorRecoveryMiddleware
@@ -209,6 +210,8 @@ async def run_sub_agent(
         topic=AGENT_COMMAND_TOPIC,
         tag_expression="task_available",
         group_id="GID-agent-runtime-pool",
+        max_messages=1,
+        lite_topics=configured_task_ready_lite_topics(),
     )
     await message_bus.subscribe(
         permission_consumer,
@@ -303,12 +306,10 @@ async def run_sub_agent(
 
     try:
         while not state.stop_requested:
-            messages = await message_bus.receive(work_consumer, timeout=5)
             if (
                 state.wake_requested.is_set()
                 or (
-                    not messages
-                    and asyncio.get_running_loop().time() - last_compensation_scan >= 15
+                    asyncio.get_running_loop().time() - last_compensation_scan >= 15
                 )
             ):
                 state.wake_requested.clear()
@@ -324,7 +325,16 @@ async def run_sub_agent(
                         continue
                     await execute_claim(claim)
                     break
-            for message in messages:
+                if state.active_claim is not None:
+                    continue
+
+            # POP is intentionally invoked only here, while the Runtime is
+            # idle. A busy Runtime must not make a task_available message
+            # invisible and prevent an idle peer from claiming its shard.
+            messages = await message_bus.receive(work_consumer, timeout=5)
+            # max_messages=1 keeps one idle Runtime to one atomic claim. This
+            # prevents one Runtime from POPing a batch it cannot execute.
+            for message in messages[:1]:
                 try:
                     if message.event_type != "task_available":
                         await message_bus.ack(message.event_id)
