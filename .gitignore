@@ -266,3 +266,8 @@ s20*/
 
 # testing reports
 reports/
+
+!tests/test_code_graph.py
+!tests/test_skill_store.py
+!tests/test_knowledge_integration.py
+!tests/test_skill_review.py

@@ -146,7 +146,7 @@ class PermissionMiddleware(AgentMiddleware):
             return {
                 "decision": (
                     "approved"
-                    if self.ask_user(tool_name, {"command": command}, reason)
+                    if await asyncio.to_thread(self.ask_user, tool_name, {"command": command}, reason)
                     else "rejected"
                 ),
                 "reason": reason,
@@ -183,6 +183,13 @@ class PermissionMiddleware(AgentMiddleware):
                 request_id=request_id,
             )
         return await self._wait_for_permission_decision(request_id)
+
+    async def authorize_skill_write(self, skill_file: str) -> bool:
+        decision = await self._request_permission(
+            tool_name="skill_manage", command=skill_file,
+            reason="Writing user-level skill outside workspace",
+        )
+        return decision.get("decision") == "approved"
 
     async def awrap_tool_call(self, request: Any, handler: Any) -> ToolMessage:
         tool_name = request.tool_call["name"]

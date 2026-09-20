@@ -17,6 +17,11 @@ from middlewares.context_compression_middleware import ContextCompressionMiddlew
 from middlewares.memory_management_middleware import MemoryManagementMiddleware
 from middlewares.permission_middleware import PermissionMiddleware
 from middlewares.skill_loading_middleware import SkillLoadingMiddleware
+from middlewares.skill_review_middleware import SkillReviewMiddleware
+from lib.skills import SkillStore
+from lib.code_graph import CodeGraphService
+from lib.knowledge_tools import create_code_graph_tool, create_skill_tools
+from lib.skill_review import SkillReviewManager
 from middlewares.error_recovery_middleware import ErrorRecoveryMiddleware
 from lib.message_hub import (
     AGENT_COMMAND_TOPIC,
@@ -53,7 +58,7 @@ try:
 except ImportError:
     pass
 
-#  Tools 
+#  Tools
 @tool
 def read_file(file_path: str) -> str:
     """读取本地文件内容。参数：file_path 文件路径（字符串）"""
@@ -124,33 +129,13 @@ def glob(pattern: str) -> str:
     except Exception as e:
         return f"Error: {e}"
 
-@tool
-def load_skill(skill_name: str) -> str:
-    """Load a skill by name from the skills directory. Returns the skill content.
-    Parameter: skill_name - the name of the skill to load
-    """
-    skill_dir = WORK_DIR / "skills" / skill_name
-    if not skill_dir.exists():
-        return f"Skill '{skill_name}' not found"
-    
-    skill_file = skill_dir / "SKILL.md"
-    if not skill_file.exists():
-        return f"Skill '{skill_name}' has no SKILL.md file"
-    
-    try:
-        content = skill_file.read_text(encoding="utf-8")
-        return content
-    except Exception as e:
-        return f"Error loading skill: {e}"
-
-
 # ═══════════════════════════════════════════════════════════
 #  Agent Setup using create_agent
 # ═══════════════════════════════════════════════════════════
 
 async def create_coding_agent(checkpointer: AsyncPostgresSaver, store: AsyncPostgresStore, message_bus: RocketMQMessageBus = None, sub_agents: dict = None, use_backup: bool = False) -> Any:
     """Create the coding agent."""
-    
+
     llm = ChatOpenAI(
         model=os.getenv("MODEL_NAME"),
         api_key=os.getenv("API_KEY"),
@@ -158,7 +143,7 @@ async def create_coding_agent(checkpointer: AsyncPostgresSaver, store: AsyncPost
         temperature=0.3,
         max_completion_tokens=8000
     )
-    
+
     light_llm = ChatOpenAI(
         model=os.getenv("LIGHT_MODEL_NAME"),
         api_key=os.getenv("API_KEY"),
@@ -167,9 +152,9 @@ async def create_coding_agent(checkpointer: AsyncPostgresSaver, store: AsyncPost
         max_completion_tokens=8000,
         verbose=False
     )
-    
-    tools = [read_file, write_file, bash, edit, glob, load_skill]
-    
+
+    tools = [read_file, write_file, bash, edit, glob]
+
     if message_bus:
         lead_tools = create_lead_agent_tools(
             message_bus=message_bus,
@@ -180,7 +165,7 @@ async def create_coding_agent(checkpointer: AsyncPostgresSaver, store: AsyncPost
             work_dir=WORK_DIR,
         )
         tools.extend(lead_tools)
-    
+
     system_prompt = f"""You are a coding agent LangCode. Act, don't explain.
 Working directory: {WORK_DIR}
 Always think step by step. If you are unsure about the next step, ask the user for clarification.
@@ -197,7 +182,7 @@ Examples:
 **User Explicit Trigger**:
 If the user explicitly says "用 DAG 分解", "Decompose this task", or similar, you MUST trigger DAG decomposition.
 """
-    
+
     context_compression = ContextCompressionMiddleware(llm=light_llm)
     error_recovery = ErrorRecoveryMiddleware(
         primary_llm=llm,
@@ -208,13 +193,18 @@ If the user explicitly says "用 DAG 分解", "Decompose this task", or similar,
         max_tokens_for_continuation=64000,
         consecutive_529_threshold=3,
     )
-    
+
     permission_middleware = PermissionMiddleware(
         work_dir=WORK_DIR,
         message_bus=message_bus,
         agent_name="lead",
     )
-    
+
+    skill_store = SkillStore(project_root=WORK_DIR)
+    review_manager = SkillReviewManager(light_llm, skill_store)
+    tools.extend(create_skill_tools(skill_store, permission_middleware))
+    tools.append(create_code_graph_tool(CodeGraphService(WORK_DIR)))
+
     agent = create_agent(
         model=llm,
         tools=tools,
@@ -224,11 +214,13 @@ If the user explicitly says "用 DAG 分解", "Decompose this task", or similar,
             #TodoListMiddleware(),
             MemoryManagementMiddleware(llm=light_llm, store=store),
             context_compression,
-            SkillLoadingMiddleware(WORK_DIR),
+            SkillLoadingMiddleware(WORK_DIR, store=skill_store),
+            SkillReviewMiddleware(review_manager),
             error_recovery,
         ],
         checkpointer=checkpointer,
     )
+    agent.skill_review_manager = review_manager
     return agent
 
 # ═══════════════════════════════════════════════════════════
@@ -244,7 +236,7 @@ async def run_streaming():
     await checkpointer.setup()
     store = AsyncPostgresStore(pool)
     await store.setup()
-    
+
     scheduler = DAGScheduler(pool)
     await scheduler.setup()
     message_bus = RocketMQMessageBus(pool)
@@ -277,7 +269,7 @@ async def run_streaming():
         group_id="GID-langcode-lead-control",
     )
     dispatcher = OutboxDispatcher(pool, message_bus)
-    
+
     async def monitor_leased_tasks():
         """后台监控 lease 过期任务"""
         while True:
@@ -288,182 +280,185 @@ async def run_streaming():
                     logger.info(f"Reclaimed {reclaimed} tasks from crashed agents")
             except Exception as e:
                 logger.error(f"Error in monitor_leased_tasks: {e}")
-    
+
     monitor_task = asyncio.create_task(monitor_leased_tasks())
     dispatcher_task = asyncio.create_task(dispatcher.run())
-    
+
     # 创建 sub_agents 字典，用于跟踪所有 sub agent
     sub_agents = {"_thread_id": None}  # thread_id 会在后面设置
-    
+
     agent = await create_coding_agent(checkpointer, store, message_bus, sub_agents)
-    
-    user_id = input("输入用户 ID (空白则为匿名用户): ").strip() or "匿名用户"
-    thread_id=input("输入 thread_id 恢复对话 (空白则为新对话): ").strip()
-    if not thread_id or thread_id == "" or thread_id=="\n":
-        thread_id=f"langcode_session_{id({})}"
-    config = {"configurable": {"thread_id": thread_id, "user_id": user_id}}
-    
-    # 设置 sub_agents 的 thread_id
-    if sub_agents:
-        sub_agents["_thread_id"] = thread_id
-    
-    print("=" * 50)
-    print("LangCode - 编码助手")
-    print("输入 'exit' 退出，输入 'reset' 重置会话")
-    print("=" * 50)
-    print(f"🤖 Session started with thread_id: {thread_id} for user: {user_id}")
-    
-    while True:
-        pending_permissions = await message_bus.get_pending_permissions()
-        if pending_permissions:
-            print("\n\033[33m[待审批权限请求]\033[0m")
-            for i, perm in enumerate(pending_permissions, 1):
-                print(f"  [{i}] {perm['agent_name']}: {perm['command']}")
-                print(f"      工具：{perm['tool_name']}")
-                print(f"      请求 ID: {perm['request_id']}")
-            print("\n使用 approve_permission <request_id> [reason] 或 reject_permission <request_id> <reason>")
-        
-        user_input = input("\033[36m用户 >> \033[0m")
-        if user_input.lower() == "exit":
-            break
-        if user_input.lower() == "reset":
-            thread_id = f"langcode_session_{id({})}"
-            config = {"configurable": {"thread_id": thread_id, "user_id": user_id}}
-            print("🤖 会话已重置")
-            continue
-        
-        if user_input.startswith("approve_permission "):
-            parts = user_input.split(" ", 2)
-            if len(parts) >= 2:
-                request_id = parts[1]
-                reason = parts[2] if len(parts) > 2 else ""
-                tools = create_lead_agent_tools(
-                    message_bus=message_bus,
-                    llm=None,
-                    light_llm=None,
-                    checkpointer=None,
-                    work_dir=None,
-                )
-                approve_tool = next(t for t in tools if t.name == "approve_permission")
-                result = await approve_tool.ainvoke({"request_id": request_id, "reason": reason})
-                print(f"\033[32m{result}\033[0m")
+
+    try:
+        user_id = (await asyncio.to_thread(input, "输入用户 ID (空白则为匿名用户): ")).strip() or "匿名用户"
+        thread_id=(await asyncio.to_thread(input, "输入 thread_id 恢复对话 (空白则为新对话): ")).strip()
+        if not thread_id or thread_id == "" or thread_id=="\n":
+            thread_id=f"langcode_session_{id({})}"
+        config = {"configurable": {"thread_id": thread_id, "user_id": user_id}}
+
+        # 设置 sub_agents 的 thread_id
+        if sub_agents:
+            sub_agents["_thread_id"] = thread_id
+
+        print("=" * 50)
+        print("LangCode - 编码助手")
+        print("输入 'exit' 退出，输入 'reset' 重置会话")
+        print("=" * 50)
+        print(f"🤖 Session started with thread_id: {thread_id} for user: {user_id}")
+
+        while True:
+            pending_permissions = await message_bus.get_pending_permissions()
+            if pending_permissions:
+                print("\n\033[33m[待审批权限请求]\033[0m")
+                for i, perm in enumerate(pending_permissions, 1):
+                    print(f"  [{i}] {perm['agent_name']}: {perm['command']}")
+                    print(f"      工具：{perm['tool_name']}")
+                    print(f"      请求 ID: {perm['request_id']}")
+                print("\n使用 approve_permission <request_id> [reason] 或 reject_permission <request_id> <reason>")
+
+            user_input = await asyncio.to_thread(input, "\033[36m用户 >> \033[0m")
+            if user_input.lower() == "exit":
+                break
+            if user_input.lower() == "reset":
+                thread_id = f"langcode_session_{id({})}"
+                config = {"configurable": {"thread_id": thread_id, "user_id": user_id}}
+                print("🤖 会话已重置")
                 continue
-        
-        if user_input.startswith("reject_permission "):
-            parts = user_input.split(" ", 2)
-            if len(parts) >= 3:
-                request_id = parts[1]
-                reason = parts[2]
-                tools = create_lead_agent_tools(
-                    message_bus=message_bus,
-                    llm=None,
-                    light_llm=None,
-                    checkpointer=None,
-                    work_dir=None,
-                )
-                reject_tool = next(t for t in tools if t.name == "reject_permission")
-                result = await reject_tool.ainvoke({"request_id": request_id, "reason": reason})
-                print(f"\033[31m{result}\033[0m")
-                continue
-        
-        print(f"\033[32m🤖 LangCode >> \033[0m", end="", flush=True)
-        
-        full_response = ""
-        is_truncated = False
-        had_truncation_event = False  # 是否发生过截断事件
-        response_metadata = None
-        continuation_attempts = 0
-        
-        # 用于跟踪是否正在输出（用于清除已输出的内容）
-        output_buffer = []
-        
-        async for event in agent.astream_events(
-            input={"messages": [{"role": "user", "content": user_input}]},
-            config={**config, "recursion_limit": 100},
-            version="v2",
-        ):
-            kind = event.get("event")
-            # 调试：打印所有事件类型
-            # print(f"\n[EVENT] {kind}: {event.get('name')}")
-            if kind == "on_chat_model_stream":
-                tags = event.get("tags", [])
-                if "internal_memory_call" in tags:
+
+            if user_input.startswith("approve_permission "):
+                parts = user_input.split(" ", 2)
+                if len(parts) >= 2:
+                    request_id = parts[1]
+                    reason = parts[2] if len(parts) > 2 else ""
+                    tools = create_lead_agent_tools(
+                        message_bus=message_bus,
+                        llm=None,
+                        light_llm=None,
+                        checkpointer=None,
+                        work_dir=None,
+                    )
+                    approve_tool = next(t for t in tools if t.name == "approve_permission")
+                    result = await approve_tool.ainvoke({"request_id": request_id, "reason": reason})
+                    print(f"\033[32m{result}\033[0m")
                     continue
-                name = event.get("name", "")
-                if "Middleware" in name:
+
+            if user_input.startswith("reject_permission "):
+                parts = user_input.split(" ", 2)
+                if len(parts) >= 3:
+                    request_id = parts[1]
+                    reason = parts[2]
+                    tools = create_lead_agent_tools(
+                        message_bus=message_bus,
+                        llm=None,
+                        light_llm=None,
+                        checkpointer=None,
+                        work_dir=None,
+                    )
+                    reject_tool = next(t for t in tools if t.name == "reject_permission")
+                    result = await reject_tool.ainvoke({"request_id": request_id, "reason": reason})
+                    print(f"\033[31m{result}\033[0m")
                     continue
-                content = event.get("data", {}).get("chunk", {}).content
-                if content:
-                    output_buffer.append(content)
-                    print(content, end="", flush=True)
-                    full_response += content
-                continue
-            
-            # 捕获模型调用的最终结果，检查是否截断
-            # 注意：可能有多个 on_chat_model_end 事件（原始调用 + 续写调用）
-            if kind == "on_chat_model_end":
-                # 检查响应元数据
-                output_obj = event.get("data", {}).get("output")
-                if isinstance(output_obj, AIMessage):
-                    response_metadata = output_obj.response_metadata
-                    finish_reason = response_metadata.get("finish_reason")
-                    truncation_handled = response_metadata.get("truncation_handled")
-                    
-                    # 检查是否有截断标记（来自 middleware）
-                    if truncation_handled:
-                        had_truncation_event = True
-                        is_truncated = False
-                        continuation_attempts = response_metadata.get("continuation_attempts", 0)
-                    # 第一次截断事件
-                    elif finish_reason == "length":
-                        had_truncation_event = True
-                        is_truncated = True
-                    # 如果之前有截断事件，现在有 stop 事件，说明续写成功
-                    elif finish_reason == "stop" and had_truncation_event:
-                        # 续写成功，但无法获取续写次数（因为续写调用的事件没有 truncation_handled 标记）
-                        # 假设至少续写了 1 次
-                        is_truncated = False
-                        continuation_attempts = 1
-                continue
-                
-            if kind == "on_tool_start" and event.get("name") == "write_todos":
-                print("\n[Planning] Agent updated todo list")
-                continue
-            
-            # if kind == "on_tool_end" and event.get("name") == "write_todos":
-            #     todos = event.get("data", {}).get("output")
-            #     if todos:
-            #         print("\n[任务列表更新]")
-            #         for todo in todos:
-            #             print(f"  {todo['status']}: {todo['content']}")
-            #     continue    
-        print()   
-        
-        if is_truncated:
-            # 未被中间件处理（续写失败或未配置中间件）
-            print("\n\033[33m[系统] 模型回复超长，部分内容可能缺失\033[0m")
-        elif had_truncation_event and not is_truncated:
-            # 已被中间件成功处理
-            print(f"\n\033[33m[系统] 模型回复超长，已自动续写 {continuation_attempts} 次\033[0m")
-        
-        # 检查是否有错误恢复的提示（从响应内容中检测）
-        if full_response and "⚠️" in full_response:
-            # 静默提示，不额外输出
+
+            print(f"\033[32m🤖 LangCode >> \033[0m", end="", flush=True)
+
+            full_response = ""
+            is_truncated = False
+            had_truncation_event = False  # 是否发生过截断事件
+            response_metadata = None
+            continuation_attempts = 0
+
+            # 用于跟踪是否正在输出（用于清除已输出的内容）
+            output_buffer = []
+
+            async for event in agent.astream_events(
+                input={"messages": [{"role": "user", "content": user_input}]},
+                config={**config, "recursion_limit": 100},
+                version="v2",
+            ):
+                kind = event.get("event")
+                # 调试：打印所有事件类型
+                # print(f"\n[EVENT] {kind}: {event.get('name')}")
+                if kind == "on_chat_model_stream":
+                    tags = event.get("tags", [])
+                    if "internal_memory_call" in tags or "internal_skill_review" in tags:
+                        continue
+                    name = event.get("name", "")
+                    if "Middleware" in name:
+                        continue
+                    content = event.get("data", {}).get("chunk", {}).content
+                    if content:
+                        output_buffer.append(content)
+                        print(content, end="", flush=True)
+                        full_response += content
+                    continue
+
+                # 捕获模型调用的最终结果，检查是否截断
+                # 注意：可能有多个 on_chat_model_end 事件（原始调用 + 续写调用）
+                if kind == "on_chat_model_end":
+                    # 检查响应元数据
+                    output_obj = event.get("data", {}).get("output")
+                    if isinstance(output_obj, AIMessage):
+                        response_metadata = output_obj.response_metadata
+                        finish_reason = response_metadata.get("finish_reason")
+                        truncation_handled = response_metadata.get("truncation_handled")
+
+                        # 检查是否有截断标记（来自 middleware）
+                        if truncation_handled:
+                            had_truncation_event = True
+                            is_truncated = False
+                            continuation_attempts = response_metadata.get("continuation_attempts", 0)
+                        # 第一次截断事件
+                        elif finish_reason == "length":
+                            had_truncation_event = True
+                            is_truncated = True
+                        # 如果之前有截断事件，现在有 stop 事件，说明续写成功
+                        elif finish_reason == "stop" and had_truncation_event:
+                            # 续写成功，但无法获取续写次数（因为续写调用的事件没有 truncation_handled 标记）
+                            # 假设至少续写了 1 次
+                            is_truncated = False
+                            continuation_attempts = 1
+                    continue
+
+                if kind == "on_tool_start" and event.get("name") == "write_todos":
+                    print("\n[Planning] Agent updated todo list")
+                    continue
+
+                # if kind == "on_tool_end" and event.get("name") == "write_todos":
+                #     todos = event.get("data", {}).get("output")
+                #     if todos:
+                #         print("\n[任务列表更新]")
+                #         for todo in todos:
+                #             print(f"  {todo['status']}: {todo['content']}")
+                #     continue
+            print()
+
+            if is_truncated:
+                # 未被中间件处理（续写失败或未配置中间件）
+                print("\n\033[33m[系统] 模型回复超长，部分内容可能缺失\033[0m")
+            elif had_truncation_event and not is_truncated:
+                # 已被中间件成功处理
+                print(f"\n\033[33m[系统] 模型回复超长，已自动续写 {continuation_attempts} 次\033[0m")
+
+            # 检查是否有错误恢复的提示（从响应内容中检测）
+            if full_response and "⚠️" in full_response:
+                # 静默提示，不额外输出
+                pass
+
+    finally:
+        await agent.skill_review_manager.close()
+        monitor_task.cancel()
+        dispatcher_task.cancel()
+        try:
+            await monitor_task
+        except asyncio.CancelledError:
             pass
-        
-    monitor_task.cancel()
-    dispatcher_task.cancel()
-    try:
-        await monitor_task
-    except asyncio.CancelledError:
-        pass
-    try:
-        await dispatcher_task
-    except asyncio.CancelledError:
-        pass
-    
-    await message_bus.close()
-    await pool.close()
+        try:
+            await dispatcher_task
+        except asyncio.CancelledError:
+            pass
+
+        await message_bus.close()
+        await pool.close()
 
 if __name__ == "__main__":
     import asyncio

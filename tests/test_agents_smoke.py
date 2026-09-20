@@ -7,10 +7,8 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AGENTS_DIR = ROOT / "agents"
-AGENT_FILES = sorted(
-    path for path in AGENTS_DIR.glob("*.py") if path.name != "__init__.py"
-)
+# The runtime entry points replaced the legacy agents/ tutorial scripts.
+AGENT_FILES = [ROOT / "cli.py", ROOT / "worker.py"]
 AGENT_IDS = [path.name for path in AGENT_FILES]
 
 
@@ -20,4 +18,4 @@ def test_agent_scripts_compile(agent_path: Path) -> None:
 
 
 def test_agent_scripts_exist() -> None:
-    assert AGENT_FILES, "expected at least one agent script"
+    assert all(path.is_file() for path in AGENT_FILES), "runtime entry points must exist"

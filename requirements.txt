@@ -92,3 +92,8 @@ xxhash==4.0.1
 zope.event==6.2
 zope.interface==8.6
 zstandard==0.25.0
+
+tree-sitter>=0.23.0,<1
+tree-sitter-language-pack>=0.3.0,<1
+filelock>=3.16,<4
+aiofiles>=24,<26

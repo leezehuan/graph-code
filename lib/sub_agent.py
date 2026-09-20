@@ -34,6 +34,9 @@ from middlewares.context_compression_middleware import ContextCompressionMiddlew
 from middlewares.error_recovery_middleware import ErrorRecoveryMiddleware
 from middlewares.permission_middleware import PermissionMiddleware
 from middlewares.skill_loading_middleware import SkillLoadingMiddleware
+from lib.skills import SkillStore
+from lib.code_graph import CodeGraphService
+from lib.knowledge_tools import create_code_graph_tool, create_skill_tools
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +80,21 @@ async def create_sub_agent(
     mailbox: RuntimeMailbox | None = None,
 ) -> Any:
     """Build an agent using only the Card frozen by the claim transaction."""
+    permission_middleware = PermissionMiddleware(
+        work_dir=work_dir,
+        message_bus=message_bus,
+        agent_name=runtime_id,
+        consumer_name=permission_consumer or runtime_id,
+        thread_id=task.thread_id,
+        task_id=task.task_id,
+        execution_id=task.execution_id,
+        attempt=task.attempt,
+    )
+    skill_store = SkillStore(project_root=work_dir, allowed_skill_names=set(task.card_skill_allowlist))
+    knowledge_tools = {item.name: item for item in [
+        create_code_graph_tool(CodeGraphService(work_dir)),
+        *create_skill_tools(skill_store, permission_middleware),
+    ]}
     tool_factories = {
         "bash": _create_bash_tool,
         "read_file": _create_read_file_tool,
@@ -86,7 +104,7 @@ async def create_sub_agent(
     }
     communication_tools = {"send_message_to_lead", "check_runtime_inbox"}
     unknown_tools = sorted(
-        set(task.card_tool_allowlist) - set(tool_factories) - communication_tools
+        set(task.card_tool_allowlist) - set(tool_factories) - communication_tools - set(knowledge_tools)
     )
     if unknown_tools:
         raise ValueError(
@@ -98,6 +116,7 @@ async def create_sub_agent(
         for name in task.card_tool_allowlist
         if name in tool_factories
     ]
+    tools.extend(knowledge_tools[name] for name in task.card_tool_allowlist if name in knowledge_tools)
     runtime_mailbox = mailbox or RuntimeMailbox()
 
     @tool
@@ -135,21 +154,11 @@ async def create_sub_agent(
     if "check_runtime_inbox" in task.card_tool_allowlist:
         tools.append(check_runtime_inbox)
 
-    permission_middleware = PermissionMiddleware(
-        work_dir=work_dir,
-        message_bus=message_bus,
-        agent_name=runtime_id,
-        consumer_name=permission_consumer or runtime_id,
-        thread_id=task.thread_id,
-        task_id=task.task_id,
-        execution_id=task.execution_id,
-        attempt=task.attempt,
-    )
     middleware: list[Any] = [permission_middleware]
     middleware.append(
         SkillLoadingMiddleware(
             work_dir,
-            allowed_skill_names=set(task.card_skill_allowlist),
+            store=skill_store,
         )
     )
     if light_llm:
