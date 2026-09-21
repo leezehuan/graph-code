@@ -1,6 +1,7 @@
 # cli.py
 import os
 import subprocess
+import sys
 import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
@@ -289,7 +290,14 @@ async def run_streaming():
 
     agent = await create_coding_agent(checkpointer, store, message_bus, sub_agents)
 
+    runtime_processes = []
     try:
+        for runtime_id in ("runtime-001", "runtime-002", "runtime-003"):
+            runtime_processes.append(subprocess.Popen(
+                [sys.executable, "-m", "worker", "--runtime-id", runtime_id],
+                cwd=WORK_DIR,
+                stdin=subprocess.DEVNULL,
+            ))
         user_id = (await asyncio.to_thread(input, "输入用户 ID (空白则为匿名用户): ")).strip() or "匿名用户"
         thread_id=(await asyncio.to_thread(input, "输入 thread_id 恢复对话 (空白则为新对话): ")).strip()
         if not thread_id or thread_id == "" or thread_id=="\n":
@@ -445,6 +453,24 @@ async def run_streaming():
                 pass
 
     finally:
+        if os.name == "nt":
+            for process in runtime_processes:
+                if process.poll() is None:
+                    subprocess.run(
+                        ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        check=False,
+                    )
+        for process in runtime_processes:
+            if process.poll() is None:
+                process.terminate()
+        for process in runtime_processes:
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
         await agent.skill_review_manager.close()
         monitor_task.cancel()
         dispatcher_task.cancel()
@@ -461,5 +487,7 @@ async def run_streaming():
         await pool.close()
 
 if __name__ == "__main__":
+    if os.name == "nt":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     import asyncio
     asyncio.run(run_streaming())

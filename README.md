@@ -6,6 +6,7 @@ Start PostgreSQL, Redis, and a single-node RocketMQ broker with:
 
 ```bash
 docker compose up -d
+docker compose run --rm rocketmq-init
 ```
 
 The services are available only on `127.0.0.1` and store their data in named
@@ -19,11 +20,65 @@ export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=postgres
 ```
 
-Redis is exposed on `127.0.0.1:6379`; RocketMQ NameServer, Broker, and the V5
+Redis is exposed on `127.0.0.1:6380`; RocketMQ NameServer, Broker, and the V5
 gRPC proxy are exposed on `127.0.0.1:9876`, `127.0.0.1:10911`, and
 `127.0.0.1:8081`, respectively. Override any published port or PostgreSQL
 setting with the corresponding environment variable when running `docker
 compose`.
+
+The second command must succeed before starting Lead/workers. It is safe to
+repeat, including after a restart or on empty Docker volumes. It creates the
+four NORMAL topics (`agent-command`, `task-event`, `permission-event`,
+`agent-message`) and the consumer groups. No Lite topics or Lite subscriptions
+are used. Groups have a `-normal` suffix to avoid old Lite group settings;
+existing topics, messages and volumes are not deleted. Legacy Outbox
+`lite_topic` values are ignored when publishing.
+
+The default runtime IDs are `runtime-001`, `runtime-002`, `runtime-003`.
+To initialize other IDs (the same command works in Bash and PowerShell):
+
+```sh
+docker compose run --rm -e LANGCODE_RUNTIME_IDS=runtime-001,runtime-002,runtime-003,runtime-004 rocketmq-init
+```
+
+After configuring `.env` with the local PostgreSQL settings and model
+credentials, start the CLI from the project directory:
+
+```sh
+python cli.py
+```
+
+The CLI automatically starts `runtime-001`, `runtime-002`, and `runtime-003`
+using the same Python environment and working directory. Worker output shares
+the terminal; workers do not read CLI input. Do not start these same runtime
+IDs manually while the CLI is running.
+
+On normal exit, Ctrl+C, or an exception, the CLI terminates its workers and
+waits up to five seconds per process, killing any that have not exited. On
+Windows it also closes the Python launcher child process created by a virtual
+environment. It does not manage externally started workers or restart failed
+workers.
+
+Run the SDK publish/receive/ack and 100 empty-inbox polls test (requires the
+project Python environment; loads `.env`; a 120-second process timeout applies):
+
+```sh
+python -c "import os,sys,subprocess; from dotenv import load_dotenv; load_dotenv(); os.environ['LANGCODE_RUN_MQ_TESTS']='1'; subprocess.run([sys.executable,'-m','pytest','tests/test_rocketmq_integration.py','-q'],timeout=120,check=True)"
+```
+
+The application receive timeout is independent of the broker POP timeout.
+The defaults are 5 seconds of broker polling plus 3 seconds of RPC margin.
+
+With the three default runtime IDs stopped, run the deterministic four-node
+DAG acceptance test (starts three worker processes itself; no LLM calls):
+
+```sh
+python -c "import subprocess,sys; subprocess.run([sys.executable,'scripts/verify_normal_dag.py'],timeout=150,check=True)"
+```
+
+It invokes Lead's `publish_dag` once, disables compensation scans in the test
+processes, checks parallel execution of `bytearray`/`osc8`, blocks `verify`
+until both finish, and checks published Outbox records and four work ACKs.
 
 ## Runtime workers
 
@@ -33,9 +88,7 @@ the proxy gRPC endpoint:
 
 ```bash
 export ROCKETMQ_ENDPOINTS=127.0.0.1:8081
-# Comma-separated task types installed in the generic Runtime. The default is
-# "general"; the shard count must match the scheduler setting.
-export TASK_WORK_TASK_TYPES=general,code.implementation,code.review
+# The shard count must match the scheduler setting.
 export TASK_WORK_SHARD_COUNT=64
 python -m worker --runtime-id runtime-001
 ```
@@ -192,4 +245,3 @@ and local HTTP endpoints; no cloud credentials, PostgreSQL, or RocketMQ are
 needed. Existing database/broker tests remain opt-in through their environment
 switches. Source indexes, private skills, sessions, and credentials are not
 imported. See `THIRD_PARTY_NOTICES.md` for the migrated modules' MIT notices.
-
