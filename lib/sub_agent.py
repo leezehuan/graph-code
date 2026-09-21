@@ -28,7 +28,6 @@ from lib.message_hub import (
     MessageBus,
     MessageEnvelope,
     RocketMQMessageBus,
-    configured_task_ready_lite_topics,
 )
 from middlewares.context_compression_middleware import ContextCompressionMiddleware
 from middlewares.error_recovery_middleware import ErrorRecoveryMiddleware
@@ -220,7 +219,6 @@ async def run_sub_agent(
         tag_expression="task_available",
         group_id="GID-agent-runtime-pool",
         max_messages=1,
-        lite_topics=configured_task_ready_lite_topics(),
     )
     await message_bus.subscribe(
         permission_consumer,

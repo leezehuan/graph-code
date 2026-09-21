@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import time
+from types import SimpleNamespace
 
 import pytest
 
@@ -10,9 +12,35 @@ from lib.message_hub import (
     AGENT_MESSAGE_TOPIC,
     InMemoryMessageBus,
     build_envelope,
-    configured_task_ready_lite_topics,
     route_envelope,
+    RocketMQMessageBus,
+    _Subscription,
 )
+
+
+def test_short_poll_keeps_one_pending_receive() -> None:
+    calls = []
+
+    def receive(*args):
+        calls.append(args)
+        time.sleep(0.3)
+        return []
+
+    async def scenario():
+        bus = RocketMQMessageBus(None)
+        sub = _Subscription("lead", AGENT_MESSAGE_TOPIC,
+                            SimpleNamespace(receive=receive), None, True, 1)
+        bus._subscriptions["lead"] = [sub]
+        started = time.monotonic()
+        for _ in range(5):
+            assert await bus.receive("lead", timeout=0.01) == []
+        assert time.monotonic() - started < 0.2
+        assert len(calls) == 1
+        await asyncio.sleep(0.35)
+        assert await bus.receive("lead", timeout=0.01) == []
+        assert len(calls) == 1
+
+    asyncio.run(scenario())
 
 
 def test_execution_context_must_be_complete() -> None:
@@ -26,7 +54,7 @@ def test_execution_context_must_be_complete() -> None:
         )
 
 
-def test_task_available_uses_ready_lite_topic_and_task_key() -> None:
+def test_task_available_uses_normal_topic_and_task_key() -> None:
     envelope = build_envelope(
         sender="scheduler",
         target=None,
@@ -41,10 +69,10 @@ def test_task_available_uses_ready_lite_topic_and_task_key() -> None:
     assert topic == AGENT_COMMAND_TOPIC
     assert tag == "task_available"
     assert key == "task-1"
-    assert lite_topic == "ready.code.implementation.s4"
+    assert lite_topic is None
 
 
-def test_directed_control_uses_runtime_lite_topic() -> None:
+def test_directed_control_uses_normal_topic() -> None:
     envelope = build_envelope(
         sender="lead",
         target="runtime-1",
@@ -57,7 +85,7 @@ def test_directed_control_uses_runtime_lite_topic() -> None:
     assert topic == AGENT_COMMAND_TOPIC
     assert tag == "execution_cancel"
     assert key == "runtime-1"
-    assert lite_topic == "runtime.runtime-1"
+    assert lite_topic is None
 
 
 def test_normal_message_uses_agent_message_topic() -> None:
@@ -108,17 +136,3 @@ def test_task_shards_are_stable_and_bounded() -> None:
 
     assert first == second
     assert 0 <= first < 64
-
-
-def test_configured_ready_lite_topics_cover_each_configured_shard(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("TASK_WORK_TASK_TYPES", "code.review, code.implementation")
-    monkeypatch.setenv("TASK_WORK_SHARD_COUNT", "2")
-
-    assert configured_task_ready_lite_topics() == (
-        "ready.code.review.s0",
-        "ready.code.review.s1",
-        "ready.code.implementation.s0",
-        "ready.code.implementation.s1",
-    )

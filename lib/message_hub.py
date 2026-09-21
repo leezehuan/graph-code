@@ -27,8 +27,6 @@ AGENT_COMMAND_TOPIC = "agent-command"
 TASK_EVENT_TOPIC = "task-event"
 PERMISSION_EVENT_TOPIC = "permission-event"
 AGENT_MESSAGE_TOPIC = "agent-message"
-TASK_READY_LITE_TOPIC_PREFIX = "ready"
-RUNTIME_CONTROL_LITE_TOPIC_PREFIX = "runtime"
 _V5_IMPORT_LOCK = threading.Lock()
 
 
@@ -64,23 +62,6 @@ def _v5_client_types() -> tuple[Any, Any, Any, Any, Any, Any]:
         SimpleConsumer,
         Producer,
         Message,
-    )
-
-
-def configured_task_ready_lite_topics() -> tuple[str, ...]:
-    """Return the configured task-ready LiteTopics for a generic Runtime."""
-    task_types = tuple(
-        task_type.strip()
-        for task_type in os.getenv("TASK_WORK_TASK_TYPES", "general").split(",")
-        if task_type.strip()
-    )
-    shard_count = int(os.getenv("TASK_WORK_SHARD_COUNT", "64"))
-    if shard_count < 1:
-        raise ValueError("TASK_WORK_SHARD_COUNT must be >= 1")
-    return tuple(
-        task_ready_lite_topic(task_type, shard)
-        for task_type in task_types
-        for shard in range(shard_count)
     )
 
 
@@ -218,26 +199,10 @@ def build_envelope(
     )
 
 
-def task_ready_lite_topic(task_type: str, work_shard: int) -> str:
-    """Return the stable LiteTopic for one ready-task shard."""
-    if not task_type:
-        raise ValueError("task_available payload.task_type is required")
-    if work_shard < 0:
-        raise ValueError("task_available payload.work_shard must be >= 0")
-    return f"{TASK_READY_LITE_TOPIC_PREFIX}.{task_type}.s{work_shard}"
-
-
-def runtime_control_lite_topic(runtime_id: str) -> str:
-    """Return the directed control LiteTopic for one Runtime."""
-    if not runtime_id:
-        raise ValueError("directed control messages require target runtime_id")
-    return f"{RUNTIME_CONTROL_LITE_TOPIC_PREFIX}.{runtime_id}"
-
-
 def route_envelope(
     envelope: MessageEnvelope,
 ) -> tuple[str, str, str | None, str | None]:
-    """Choose the RocketMQ topic, tag, key, and optional LiteTopic."""
+    """Choose a NORMAL topic, tag and key; the legacy LiteTopic column stays NULL."""
     event_type = envelope.event_type
     lite_topic: str | None = None
 
@@ -251,15 +216,18 @@ def route_envelope(
             raise ValueError(
                 "task_available requires payload.task_type and payload.work_shard"
             ) from exc
-        lite_topic = task_ready_lite_topic(task_type, work_shard)
+        if not task_type or work_shard < 0:
+            raise ValueError("task_available requires a task type and nonnegative shard")
     elif event_type in {"permission_response", "execution_cancel"}:
         topic = AGENT_COMMAND_TOPIC
         tag = event_type
-        lite_topic = runtime_control_lite_topic(envelope.target or "")
+        if not envelope.target:
+            raise ValueError("directed control messages require target runtime_id")
     elif event_type == "runtime_wakeup":
         topic = AGENT_COMMAND_TOPIC
         tag = event_type
-        lite_topic = runtime_control_lite_topic(envelope.target or "")
+        if not envelope.target:
+            raise ValueError("directed control messages require target runtime_id")
     elif event_type.startswith("permission."):
         topic = PERMISSION_EVENT_TOPIC
         tag = event_type
@@ -270,7 +238,7 @@ def route_envelope(
         topic = AGENT_MESSAGE_TOPIC
         tag = event_type
 
-    if lite_topic and lite_topic.startswith(f"{RUNTIME_CONTROL_LITE_TOPIC_PREFIX}."):
+    if event_type in {"permission_response", "execution_cancel", "runtime_wakeup"}:
         message_key = envelope.target
     else:
         message_key = (
@@ -534,122 +502,28 @@ class _Subscription:
     target: str | None
     allow_broadcast: bool
     max_messages: int
-    lite_topics: tuple[str, ...]
+    pending_receive: asyncio.Task | None = None
 
 
-def _default_lite_topics(
-    *,
-    topic: str,
-    tag_expression: str,
-    target: str | None,
-) -> tuple[str, ...]:
-    if topic != AGENT_COMMAND_TOPIC:
-        return ()
-    if tag_expression == "task_available":
-        return configured_task_ready_lite_topics()
-    if target is not None:
-        return (runtime_control_lite_topic(target),)
-    return ()
-
-
-def _enable_lite_simple_consumer(consumer: Any) -> None:
-    """Enable Lite POP mode missing from the public 5.1.1 Python SDK surface."""
-    from rocketmq.grpc_protocol import ClientType
-
-    # The SDK defines ClientType.LITE_SIMPLE_CONSUMER but does not expose a
-    # matching class. SimpleConsumer otherwise supplies exactly the POP
-    # receive lifecycle we need.
-    consumer._Client__client_type = ClientType.LITE_SIMPLE_CONSUMER
-
-
-def _sync_lite_subscriptions(
-    consumer: Any,
-    lite_topics: tuple[str, ...],
-) -> None:
-    """Bind a Lite POP consumer to its configured LiteTopic collection."""
-    from rocketmq.grpc_protocol import (
-        LiteSubscriptionAction,
-        SyncLiteSubscriptionRequest,
-    )
-    from rocketmq.v5.util import MessagingResultChecker
-
-    request = SyncLiteSubscriptionRequest()
-    request.action = LiteSubscriptionAction.COMPLETE_ADD
-    request.topic.name = AGENT_COMMAND_TOPIC
-    request.topic.resource_namespace = consumer.client_configuration.namespace
-    request.group.name = consumer.consumer_group
-    request.group.resource_namespace = consumer.client_configuration.namespace
-    request.lite_topic_set.extend(lite_topics)
-    response = consumer.rpc_client.sync_lite_subscription_async(
-        consumer.client_configuration.rpc_endpoints,
-        request,
-        metadata=consumer._sign(),
-        timeout=consumer.client_configuration.request_timeout,
-    ).result()
-    MessagingResultChecker.check(response.status)
+def _start_client(client: Any) -> None:
+    # SDK 5.1.1 otherwise waits forever when telemetry rejects a missing group.
+    event = client._init_settings_event
+    wait = event.wait
+    event.wait = lambda timeout=None: wait(client.client_configuration.request_timeout + 1)
+    client.startup()
+    if not event.is_set():
+        client.shutdown()
+        raise TimeoutError("RocketMQ startup: no settings received; check endpoint and consumer group")
 
 
 def _ack_broker_message(subscription: _Subscription, message: Any) -> None:
-    if not subscription.lite_topics:
-        subscription.broker_consumer.ack(message)
-        return
-
-    from rocketmq.grpc_protocol import AckMessageEntry, AckMessageRequest
-    from rocketmq.v5.util import MessagingResultChecker
-
-    consumer = subscription.broker_consumer
-    request = AckMessageRequest()
-    request.group.name = consumer.consumer_group
-    request.group.resource_namespace = consumer.client_configuration.namespace
-    request.topic.name = message.topic
-    request.topic.resource_namespace = consumer.client_configuration.namespace
-    entry = AckMessageEntry()
-    entry.message_id = message.message_id
-    entry.receipt_handle = message.receipt_handle
-    entry.lite_topic = message.lite_topic
-    request.entries.append(entry)
-    response = consumer.rpc_client.ack_message_async(
-        message.endpoints,
-        request,
-        metadata=consumer._sign(),
-        timeout=consumer.client_configuration.request_timeout,
-    ).result()
-    MessagingResultChecker.check(response.status)
+    subscription.broker_consumer.ack(message)
 
 
 def _change_broker_message_invisible_duration(
-    subscription: _Subscription,
-    message: Any,
-    invisible_duration: int,
+    subscription: _Subscription, message: Any, invisible_duration: int,
 ) -> None:
-    if not subscription.lite_topics:
-        subscription.broker_consumer.change_invisible_duration(
-            message,
-            invisible_duration,
-        )
-        return
-
-    from rocketmq.grpc_protocol import ChangeInvisibleDurationRequest
-    from rocketmq.v5.util import MessagingResultChecker
-
-    consumer = subscription.broker_consumer
-    request = ChangeInvisibleDurationRequest()
-    request.group.name = consumer.consumer_group
-    request.group.resource_namespace = consumer.client_configuration.namespace
-    request.topic.name = message.topic
-    request.topic.resource_namespace = consumer.client_configuration.namespace
-    request.receipt_handle = message.receipt_handle
-    request.invisible_duration.seconds = invisible_duration
-    request.message_id = message.message_id
-    request.lite_topic = message.lite_topic
-    response = consumer.rpc_client.change_invisible_duration_async(
-        message.endpoints,
-        request,
-        metadata=consumer._sign(),
-        timeout=consumer.client_configuration.request_timeout,
-    ).result()
-    message.receipt_handle = response.receipt_handle
-    MessagingResultChecker.check(response.status)
+    subscription.broker_consumer.change_invisible_duration(message, invisible_duration)
 
 
 class RocketMQMessageBus(PostgresOutboxMessageBus):
@@ -692,6 +566,10 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
         await self._ensure_producer()
 
     async def close(self) -> None:
+        pending = [s.pending_receive for subs in self._subscriptions.values()
+                   for s in subs if s.pending_receive is not None]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
         consumers = [
             subscription.broker_consumer
             for subscriptions in self._subscriptions.values()
@@ -723,7 +601,6 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
         allow_broadcast: bool = True,
         group_id: str | None = None,
         max_messages: int = 16,
-        lite_topics: tuple[str, ...] | None = None,
     ) -> None:
         """Configure a local V5 POP consumer and destination filter.
 
@@ -752,6 +629,8 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
             ) from exc
 
         broker_group = group_id or f"GID-langcode-{_safe_group_component(consumer)}"
+        # Do not inherit incompatible Lite attributes from existing groups.
+        broker_group += "-normal"
         configuration = ClientConfiguration(
             self.endpoints,
             Credentials(
@@ -764,25 +643,16 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
             configuration,
             broker_group,
             {topic: FilterExpression(tag_expression)},
-        await_duration=max(
-            1,
-            int(os.getenv("ROCKETMQ_POP_POLL_SECONDS", "1")),
-        ),
+            # SDK adds request_timeout (3s) to this broker poll budget (5s).
+            await_duration=max(5, int(os.getenv("ROCKETMQ_POP_POLL_SECONDS", "5"))),
         )
-        resolved_lite_topics = lite_topics or _default_lite_topics(
-            topic=topic,
-            tag_expression=tag_expression,
-            target=target,
-        )
-        if resolved_lite_topics:
-            _enable_lite_simple_consumer(mq_consumer)
-        await asyncio.to_thread(mq_consumer.startup)
-        if resolved_lite_topics:
-            await asyncio.to_thread(
-                _sync_lite_subscriptions,
-                mq_consumer,
-                resolved_lite_topics,
-            )
+        try:
+            await asyncio.to_thread(_start_client, mq_consumer)
+        except Exception:
+            if mq_consumer.is_running:
+                await asyncio.to_thread(mq_consumer.shutdown)
+            await self.close()
+            raise
         subscriptions.append(
             _Subscription(
                 consumer=consumer,
@@ -791,7 +661,6 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
                 target=target,
                 allow_broadcast=allow_broadcast,
                 max_messages=max_messages,
-                lite_topics=resolved_lite_topics,
             )
         )
 
@@ -813,11 +682,27 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
             self._subscription_positions[consumer] = (position + 1) % len(
                 subscriptions
             )
-            messages = await asyncio.to_thread(
-                subscription.broker_consumer.receive,
-                subscription.max_messages,
-                max(1, int(self.receipt_timeout)),
+            if subscription.pending_receive is None:
+                subscription.pending_receive = asyncio.create_task(asyncio.to_thread(
+                    subscription.broker_consumer.receive,
+                    subscription.max_messages,
+                    max(1, int(self.receipt_timeout)),
+                ))
+            done, _ = await asyncio.wait(
+                [subscription.pending_receive],
+                timeout=max(0, deadline - asyncio.get_running_loop().time()),
             )
+            if not done:
+                return []
+            pending = subscription.pending_receive
+            subscription.pending_receive = None
+            try:
+                messages = pending.result()
+            except Exception as exc:
+                raise RuntimeError(
+                    f"RocketMQ receive failed: endpoint={self.endpoints}, "
+                    f"topic={subscription.topic}, consumer={consumer}: {exc}"
+                ) from exc
             envelopes: list[MessageEnvelope] = []
             for broker_message in messages:
                 try:
@@ -866,7 +751,7 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
                         subscription,
                         broker_message,
                     )
-            if envelopes or asyncio.get_running_loop().time() >= deadline:
+            if envelopes or len(subscriptions) == 1 or asyncio.get_running_loop().time() >= deadline:
                 return envelopes
 
     async def ack(self, event_id: str) -> None:
@@ -950,8 +835,7 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
             message.tag = tag
             if message_key:
                 message.keys = message_key
-            if lite_topic:
-                message.lite_topic = lite_topic
+            # Ignore legacy Outbox lite_topic values: every publish is NORMAL.
             message.body = json.dumps(envelope, ensure_ascii=False).encode("utf-8")
             self._producer.send(message)
 
@@ -994,7 +878,7 @@ class RocketMQMessageBus(PostgresOutboxMessageBus):
                     AGENT_MESSAGE_TOPIC,
                 },
             )
-            await asyncio.to_thread(producer.startup)
+            await asyncio.to_thread(_start_client, producer)
             self._producer = producer
 
     async def _claim_delivery(self, consumer: str, event_id: str) -> bool:

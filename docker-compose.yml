@@ -26,7 +26,7 @@ services:
     container_name: langcode-redis
     command: redis-server --appendonly yes
     ports:
-      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6380}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -95,6 +95,18 @@ services:
       retries: 12
       start_period: 20s
     restart: unless-stopped
+
+  rocketmq-init:
+    image: apache/rocketmq:5.5.0
+    depends_on:
+      rocketmq-broker:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/opt/init.sh"]
+    environment:
+      LANGCODE_RUNTIME_IDS: ${LANGCODE_RUNTIME_IDS:-runtime-001,runtime-002,runtime-003}
+    volumes:
+      - ./docker/rocketmq/init.sh:/opt/init.sh:ro
+    restart: "no"
 
   # dashboard:
   #   image: apache/rocketmq-dashboard:latest

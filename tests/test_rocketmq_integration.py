@@ -2,14 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sys
 from uuid import uuid4
 
 import pytest
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from lib.db import get_postgres_uri
-from lib.message_hub import AGENT_MESSAGE_TOPIC, OutboxDispatcher, RocketMQMessageBus
+from lib.message_hub import (
+    AGENT_MESSAGE_TOPIC, AGENT_COMMAND_TOPIC, TASK_EVENT_TOPIC,
+    PERMISSION_EVENT_TOPIC, OutboxDispatcher, RocketMQMessageBus,
+)
 
 
 pytestmark = pytest.mark.skipif(
@@ -18,7 +25,14 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_outbox_publish_and_directed_consumer_ack() -> None:
+@pytest.mark.parametrize("topic,event_type", [
+    (AGENT_MESSAGE_TOPIC, "mq.integration"),
+    (AGENT_COMMAND_TOPIC, "permission_response"),
+    (AGENT_COMMAND_TOPIC, "task_available"),
+    (TASK_EVENT_TOPIC, "task.smoke"),
+    (PERMISSION_EVENT_TOPIC, "permission.smoke"),
+])
+def test_outbox_publish_and_directed_consumer_ack(topic: str, event_type: str) -> None:
     async def scenario() -> None:
         pool = AsyncConnectionPool(
             get_postgres_uri(),
@@ -31,22 +45,28 @@ def test_outbox_publish_and_directed_consumer_ack() -> None:
         bus = RocketMQMessageBus(pool, receipt_timeout=30)
         event_id: str | None = None
         consumer = f"mq-test-{uuid4().hex}"
-        target = f"runtime-{uuid4().hex}"
+        control = event_type == "permission_response"
+        target = "lead" if control else f"runtime-{uuid4().hex}"
         try:
             await bus.setup()
             await bus.subscribe(
                 consumer,
-                topic=AGENT_MESSAGE_TOPIC,
-                tag_expression="mq.integration",
+                topic=topic,
+                tag_expression=event_type,
                 target=target,
                 allow_broadcast=False,
-                group_id=f"GID-{consumer}",
+                group_id="GID-langcode-lead-control" if control else "GID-langcode-smoke",
             )
+            for _ in range(100):
+                # Existing volumes may retain messages from earlier smoke runs.
+                for old in await bus.receive(consumer, timeout=0.1):
+                    assert old.sender == "integration-test"
+                    await bus.ack(old.event_id)
             event_id = await bus.send(
                 sender="integration-test",
                 target=target,
-                event_type="mq.integration",
-                payload={"kind": "outbox-direct"},
+                event_type=event_type,
+                payload={"kind": "outbox-direct", "task_type": "general", "work_shard": 0},
             )
             dispatcher = OutboxDispatcher(pool, bus, batch_size=100)
 
