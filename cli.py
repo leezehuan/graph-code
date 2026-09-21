@@ -309,7 +309,7 @@ async def run_streaming():
             sub_agents["_thread_id"] = thread_id
 
         print("=" * 50)
-        print("LangCode - 编码助手")
+        print("graph-code - 编码助手")
         print("输入 'exit' 退出，输入 'reset' 重置会话")
         print("=" * 50)
         print(f"🤖 Session started with thread_id: {thread_id} for user: {user_id}")
@@ -367,7 +367,7 @@ async def run_streaming():
                     print(f"\033[31m{result}\033[0m")
                     continue
 
-            print(f"\033[32m🤖 LangCode >> \033[0m", end="", flush=True)
+            print(f"\033[32m🤖 graph-code >> \033[0m", end="", flush=True)
 
             full_response = ""
             is_truncated = False

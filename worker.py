@@ -23,7 +23,7 @@ from lib.structured_logging import configure_structured_logging
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run a generic LangCode Runtime")
+    parser = argparse.ArgumentParser(description="Run a generic graph-code Runtime")
     parser.add_argument("--runtime-id", required=True)
     parser.add_argument("--runtime-version", default="v1")
     parser.add_argument("--max-rounds", type=int, default=30)
@@ -33,7 +33,7 @@ def parse_args() -> argparse.Namespace:
 async def main() -> None:
     args = parse_args()
     load_dotenv(override=True)
-    configure_structured_logging("langcode-runtime")
+    configure_structured_logging("graph-code-runtime")
 
     pool = create_async_pool()
     await pool.open()
