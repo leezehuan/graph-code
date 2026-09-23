@@ -1,0 +1,26 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	model(model)
+	tools(tools)
+	MemoryManagementMiddleware\2eafter_model(MemoryManagementMiddleware.after_model)
+	ContextCompressionMiddleware\2ebefore_model(ContextCompressionMiddleware.before_model)
+	SkillReviewMiddleware\2eafter_model(SkillReviewMiddleware.after_model)
+	SkillReviewMiddleware\2eafter_agent(SkillReviewMiddleware.after_agent)
+	__end__([<p>__end__</p>]):::last
+	ContextCompressionMiddleware\2ebefore_model --> model;
+	MemoryManagementMiddleware\2eafter_model -.-> ContextCompressionMiddleware\2ebefore_model;
+	MemoryManagementMiddleware\2eafter_model -.-> SkillReviewMiddleware\2eafter_agent;
+	MemoryManagementMiddleware\2eafter_model -.-> tools;
+	SkillReviewMiddleware\2eafter_model --> MemoryManagementMiddleware\2eafter_model;
+	__start__ --> ContextCompressionMiddleware\2ebefore_model;
+	model --> SkillReviewMiddleware\2eafter_model;
+	tools -.-> ContextCompressionMiddleware\2ebefore_model;
+	SkillReviewMiddleware\2eafter_agent --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

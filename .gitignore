@@ -271,3 +271,11 @@ reports/
 !tests/test_skill_store.py
 !tests/test_knowledge_integration.py
 !tests/test_skill_review.py
+!tests/test_memories.py
+
+tmp/
+concise_chinese_pseudocode/
+
+# Local agent planning and workspace state
+.opencode/
+.langcode/

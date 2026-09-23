@@ -93,12 +93,42 @@ LANGCODE_RUNTIME_IDS=runtime-001,runtime-002,runtime-003,runtime-004
 
 ### 记忆与 Skill
 
-项目支持四类长期记忆：
+Lead 使用 PostgreSQL Store 和项目内 JSON 文件保存四类长期记忆：
 
-- `user`：用户角色、偏好和知识背景。
-- `feedback`：用户纠正、约束及后续应用方式。
-- `project`：项目目标、决策、进展和长期上下文。
-- `reference`：外部文档、工具或仪表盘引用。
+- `semantic`：用户稳定偏好，按用户隔离并可跨项目使用。
+- `procedural`：明确的工作规则，可指定用户级或项目级，默认项目级。
+- `episodic`：已经验证的历史事件、原因、处理方法及结果，同项目用户共享。
+- `project`：当前有效的架构事实、约定与决策，同项目用户共享。
+
+身份来自调用配置 `configurable.user_id` 与规范化工作目录的哈希。缺少用户 ID
+时关闭个人记忆读写，项目记忆仍可用；CLI 的“匿名用户”是共享的匿名身份。
+这是应用层的数据分区，调用方应提供可信的用户 ID，不等同于身份认证。
+Worker 本次不接入长期记忆工具或自动召回。
+
+用户记忆（`semantic` 和用户级 `procedural`）存于 PostgreSQL namespace
+`("memories_v2", "user", user_id)`。项目记忆（`project`、`episodic` 和项目级
+`procedural`）以每条一份 JSON 文件存于 `<project_root>/.langcode/memories/`，
+目录默认由 Git 忽略。文件记录包含稳定 UUID、类型、范围、摘要、内容、来源及
+创建/更新时间；写入使用文件锁和原子替换，无需数据库表迁移。现有 PostgreSQL
+项目记忆保留但不自动读取或迁移。
+
+每次模型调用前，从各可访问范围最近更新的 100 条记录中由轻量模型选择最多
+5 条，注入不超过 2,000 token 的参考信息；当前用户要求优先。
+完整、非空的最终回答之后提取新记忆或按候选 ID 更新已有记忆。
+提取策略排除临时进度、猜测、敏感凭据及共享记忆中的个人信息。
+召回和保存失败仅记录日志，不阻断主任务；共享记录并发更新采用后写入者生效。
+
+Lead 提供 `memory_list(type?, scope?, limit=20, offset=0)`、`memory_get(scope, id)`、
+`memory_update(scope, id, description, content)`、`memory_delete(scope, id)`。
+更新和删除应依据用户明确要求，目标限定当前用户或项目；不提供批量删除。
+更新保留类型和范围。管理操作成功后，本次 Agent 调用跳过自动提取，防止立即
+重建已删除记忆或覆盖修改；下一次调用恢复。
+
+`configurable.memory_enabled=false` 同时关闭自动召回和保存；最近用户消息中的
+“不要使用记忆”“禁用记忆”“停止记忆”也会在本轮完整工具循环中生效。
+管理工具仍可处理明确请求。“忘记所有”不是禁用开关或批量删除命令，需要先
+明确范围和记录。这些控制不关闭独立的后台 Skill 审查。
+记忆保存事实与事件；后台 Skill 审查从成功操作和用户纠正中提炼通用方法。
 
 项目 Skill 位于 `skills/<name>/SKILL.md`。Skill 支持热加载、权限控制、附件管理和自动审视；用户级 Skill 默认位于 `~/.langcode/skills/`。项目级同名 Skill 优先于用户级 Skill。
 

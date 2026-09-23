@@ -16,6 +16,7 @@ from typing import Any
 
 from middlewares.context_compression_middleware import ContextCompressionMiddleware
 from middlewares.memory_management_middleware import MemoryManagementMiddleware
+from lib.memory_tools import create_memory_tools
 from middlewares.permission_middleware import PermissionMiddleware
 from middlewares.skill_loading_middleware import SkillLoadingMiddleware
 from middlewares.skill_review_middleware import SkillReviewMiddleware
@@ -39,7 +40,6 @@ from lib.structured_logging import configure_structured_logging
 from logging import getLogger
 import logging
 
-configure_structured_logging("langcode-cli")
 logger = getLogger("__main__")
 
 # 处理环境变量
@@ -48,6 +48,7 @@ os.environ.pop("MODEL_NAME", None)
 os.environ.pop("BASE_URL", None)
 os.environ.pop("LIGHT_MODEL_NAME", None)
 load_dotenv(override=True)
+configure_structured_logging("graph-code-cli")
 WORK_DIR=Path(os.getcwd())
 
 try:
@@ -205,6 +206,8 @@ If the user explicitly says "用 DAG 分解", "Decompose this task", or similar,
     review_manager = SkillReviewManager(light_llm, skill_store)
     tools.extend(create_skill_tools(skill_store, permission_middleware))
     tools.append(create_code_graph_tool(CodeGraphService(WORK_DIR)))
+    memory_middleware = MemoryManagementMiddleware(llm=light_llm, store=store, project_root=WORK_DIR)
+    tools.extend(create_memory_tools(memory_middleware.repository))
 
     agent = create_agent(
         model=llm,
@@ -213,7 +216,7 @@ If the user explicitly says "用 DAG 分解", "Decompose this task", or similar,
         middleware=[
             permission_middleware,
             #TodoListMiddleware(),
-            MemoryManagementMiddleware(llm=light_llm, store=store),
+            memory_middleware,
             context_compression,
             SkillLoadingMiddleware(WORK_DIR, store=skill_store),
             SkillReviewMiddleware(review_manager),

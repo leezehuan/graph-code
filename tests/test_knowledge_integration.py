@@ -112,6 +112,7 @@ def test_lead_factory_registers_tools_and_closes_review(tmp_path, monkeypatch):
         result = (await agent.aget_state(config)).values
         await agent.skill_review_manager.close()
         assert {"code_graph", "skills_list", "skill_view", "skill_manage", "load_skill"} <= set(primary.tool_names)
+        assert {"memory_list", "memory_get", "memory_update", "memory_delete"} <= set(primary.tool_names)
         assert result["skill_review_last_submitted"]
         assert len(light.seen) == 1
         assert all(event.get("name") != "background-review-model" for event in events)
